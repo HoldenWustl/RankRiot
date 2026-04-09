@@ -721,6 +721,7 @@ function triggerOvertakeEffect(winnerName, loserName) {
         currentTranslate = 0; 
         
         banner.style.transition = 'none'; 
+        banner.style.animation = 'none';
         clearTimeout(autoRemoveTimer);
         
         // CRITICAL FIX 3: Safely capture the pointer on the explicit target
