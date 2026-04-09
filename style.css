@@ -63,13 +63,31 @@ h1.title {
 }
 
 .subtitle {
-    font-size: 1.1rem;
-    color: var(--text-muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.4rem;
+    color: var(--riot-blue);
     letter-spacing: 4px;
-    font-weight: bold;
-    margin-bottom: 50px;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+    
+    /* Flexbox for perfect centering and stacking */
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    text-align: center;
+    gap: 8px; /* Adds a little breathing room between the two lines */
+    
+    /* Text glow to match the vibe */
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+    
+    /* Ensure it doesn't hit the screen edges on tiny phones */
+    width: 90%; 
 }
 
+.subtitle span {
+    display: block;
+    white-space: nowrap; /* Keeps each line on its own single line */
+}
 /* --- The Glow Button --- */
 .glow-btn {
     font-size: 1.5rem;
