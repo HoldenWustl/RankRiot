@@ -687,21 +687,25 @@ function triggerOvertakeEffect(winnerName, loserName) {
 
     const banner = document.createElement('div');
     banner.classList.add('overtake-banner');
+    
+    // CRITICAL FIX 1: Add pointer-events: none to children 
+    // so the pointer always targets the banner div itself.
     banner.innerHTML = `
-        <h1>💥 OVERTAKEN! 💥</h1>
-        <p>${winnerName} crushed ${loserName}!</p>
+        <h1 style="pointer-events: none;">💥 OVERTAKEN! 💥</h1>
+        <p style="pointer-events: none;">${winnerName} crushed ${loserName}!</p>
     `;
 
-    // --- CRITICAL FIX 1: INLINE CSS ENFORCEMENT ---
-    // This physically stops the browser from trying to scroll or highlight text when you grab the banner
+    // CRITICAL FIX 2: Force layering and interaction via JS
+    banner.style.pointerEvents = 'auto'; // Overrides any CSS blocking interaction
+    banner.style.zIndex = '9999'; // Forces it above all other game layers
     banner.style.touchAction = 'none'; 
     banner.style.userSelect = 'none';
     banner.style.webkitUserSelect = 'none';
-    banner.style.willChange = 'transform, opacity'; // Boosts animation performance on mobile
+    banner.style.willChange = 'transform, opacity'; 
 
     document.body.appendChild(banner);
 
-    if (navigator.vibrate) navigator.vibrate([50, 50, 100]); // Heavy hit
+    if (navigator.vibrate) navigator.vibrate([50, 50, 100]); 
 
     let autoRemoveTimer = setTimeout(() => {
         if (banner.parentNode) banner.remove();
@@ -718,7 +722,9 @@ function triggerOvertakeEffect(winnerName, loserName) {
         
         banner.style.transition = 'none'; 
         clearTimeout(autoRemoveTimer);
-        banner.setPointerCapture(e.pointerId); 
+        
+        // CRITICAL FIX 3: Safely capture the pointer on the explicit target
+        e.target.setPointerCapture(e.pointerId); 
     });
 
     banner.addEventListener('pointermove', (e) => {
@@ -726,16 +732,18 @@ function triggerOvertakeEffect(winnerName, loserName) {
         
         currentTranslate = e.clientX - startX;
         
-        // --- CRITICAL FIX 2: SAFE TRANSFORM ---
-        // Using calc() ensures that if your banner is centered using -50% X and -50% Y, 
-        // we don't accidentally delete the Y centering when dragging left/right.
         banner.style.transform = `translate(calc(-50% + ${currentTranslate}px), -50%)`;
         banner.style.opacity = 1 - (Math.abs(currentTranslate) / window.innerWidth);
     });
 
-    const handleRelease = () => {
+    const handleRelease = (e) => {
         if (!isDragging) return;
         isDragging = false;
+
+        // Release the pointer cleanly
+        if (e.target.hasPointerCapture && e.target.hasPointerCapture(e.pointerId)) {
+            e.target.releasePointerCapture(e.pointerId);
+        }
 
         banner.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
 
@@ -763,7 +771,7 @@ function triggerOvertakeEffect(winnerName, loserName) {
     };
 
     banner.addEventListener('pointerup', handleRelease);
-    banner.addEventListener('pointercancel', handleRelease); // Catches the system interruptions
+    banner.addEventListener('pointercancel', handleRelease);
 }
 // --- JUICE: Milestone Nuke ---
 function triggerMilestoneNuke(name, totalVotes) {
