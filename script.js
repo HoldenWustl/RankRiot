@@ -716,60 +716,75 @@ function triggerOvertakeEffect(winnerName, loserName) {
     let startX = 0, startY = 0;
     let currX = 0, currY = 0;
     let isDragging = false;
+    let hasSnapped = false; // New flag to ensure we only freeze once
+const threshold = 8;
 
-    banner.addEventListener('pointerdown', (e) => {
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        banner.style.transition = 'none'; 
-        banner.style.animation = 'none'; 
-        clearTimeout(autoRemoveTimer);
-        e.target.setPointerCapture(e.pointerId); 
-    });
+   banner.addEventListener('pointerdown', (e) => {
+    startX = e.clientX;
+    startY = e.clientY;
+    isDragging = true;
+    hasSnapped = false; // Reset for this interaction
+    e.target.setPointerCapture(e.pointerId);
+});
 
     banner.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
-        currX = e.clientX - startX;
-        currY = e.clientY - startY;
-        
-        // Rotation makes it feel like it's being "tossed"
-        const rotation = currX * 0.08; 
-        
-        banner.style.transform = `translate(calc(-50% + ${currX}px), calc(-50% + ${currY}px)) rotate(${rotation}deg)`;
-        banner.style.opacity = 1 - (Math.abs(currX) / (window.innerWidth / 1.5));
-    });
+    if (!isDragging) return;
 
-    const handleRelease = (e) => {
-        if (!isDragging) return;
-        isDragging = false;
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-        if (e.target.hasPointerCapture && e.target.hasPointerCapture(e.pointerId)) {
-            e.target.releasePointerCapture(e.pointerId);
-        }
+    // Only kill the animation if the user has actually started swiping
+    if (!hasSnapped && distance > threshold) {
+        const style = window.getComputedStyle(banner);
+        banner.style.transform = style.transform; // Freeze it where it is
+        banner.style.animation = 'none';
+        banner.style.transition = 'none';
+        clearTimeout(autoRemoveTimer); // Stop auto-remove once they start swiping
+        hasSnapped = true;
+    }
+
+    // Only update position if the swipe has officially "started"
+    if (hasSnapped) {
+        const rotation = deltaX * 0.08;
+        banner.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) rotate(${rotation}deg)`;
+        banner.style.opacity = 1 - (Math.abs(deltaX) / (window.innerWidth / 1.2));
+    }
+});
+
+  const handleRelease = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    if (e.target.hasPointerCapture && e.target.hasPointerCapture(e.pointerId)) {
+        e.target.releasePointerCapture(e.pointerId);
+    }
+
+    // Only trigger the "yeet" or "snap back" logic if the user actually swiped
+    if (hasSnapped) {
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
 
         banner.style.transition = 'transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s';
 
-        // Threshold for yeeting (based on horizontal or vertical distance)
-        if (Math.abs(currX) > 100 || Math.abs(currY) > 100) {
-            const angle = Math.atan2(currY, currX);
-            const velocity = 1500; 
-            const finalX = Math.cos(angle) * velocity;
-            const finalY = Math.sin(angle) * velocity;
-
-            banner.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px)) rotate(${currX * 0.5}deg)`;
+        if (Math.abs(deltaX) > 100 || Math.abs(deltaY) > 100) {
+            // ... (Your existing "Yeet" logic)
+            const angle = Math.atan2(deltaY, deltaX);
+            const finalX = Math.cos(angle) * 1500;
+            const finalY = Math.sin(angle) * 1500;
+            banner.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px)) rotate(${deltaX * 0.5}deg)`;
             banner.style.opacity = '0';
-            
-            setTimeout(() => { if (banner.parentNode) banner.remove(); }, 400);
+            setTimeout(() => banner.remove(), 400);
         } else {
-            // Snap back
+            // Snap back to center
             banner.style.transform = 'translate(-50%, -50%) rotate(0deg)';
-            banner.style.opacity = '1';
-            autoRemoveTimer = setTimeout(() => { if (banner.parentNode) banner.remove(); }, 2000);
+            autoRemoveTimer = setTimeout(() => banner.remove(), 2000);
         }
-    };
+    }
+};
 
-    banner.addEventListener('pointerup', handleRelease);
-    banner.addEventListener('pointercancel', handleRelease);
+banner.addEventListener('pointerup', handleRelease);
+banner.addEventListener('pointercancel', handleRelease);
 }
 // --- JUICE: Milestone Nuke ---
 function triggerMilestoneNuke(name, totalVotes) {
