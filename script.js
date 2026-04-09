@@ -682,7 +682,6 @@ window.seedDatabase = async function() {
     console.log("✅ DONE! All 5 databases are fresh and seeded. Refresh the page.");
 };
 
-// --- JUICE: Overtake Explosion ---
 function triggerOvertakeEffect(winnerName, loserName) {
     if (document.querySelector('.overtake-banner')) return; 
 
@@ -692,6 +691,14 @@ function triggerOvertakeEffect(winnerName, loserName) {
         <h1>💥 OVERTAKEN! 💥</h1>
         <p>${winnerName} crushed ${loserName}!</p>
     `;
+
+    // --- CRITICAL FIX 1: INLINE CSS ENFORCEMENT ---
+    // This physically stops the browser from trying to scroll or highlight text when you grab the banner
+    banner.style.touchAction = 'none'; 
+    banner.style.userSelect = 'none';
+    banner.style.webkitUserSelect = 'none';
+    banner.style.willChange = 'transform, opacity'; // Boosts animation performance on mobile
+
     document.body.appendChild(banner);
 
     if (navigator.vibrate) navigator.vibrate([50, 50, 100]); // Heavy hit
@@ -700,35 +707,32 @@ function triggerOvertakeEffect(winnerName, loserName) {
         if (banner.parentNode) banner.remove();
     }, 1500);
 
-    // State variables
     let startX = 0;
     let currentTranslate = 0;
     let isDragging = false;
 
-    // 1. POINTER DOWN (Replaces touchstart)
     banner.addEventListener('pointerdown', (e) => {
         isDragging = true;
         startX = e.clientX; 
-        currentTranslate = 0; // Prevent stale data from a previous abandoned swipe
+        currentTranslate = 0; 
         
         banner.style.transition = 'none'; 
         clearTimeout(autoRemoveTimer);
-        
-        // This forces the browser to keep sending mouse/touch events to the banner 
-        // even if the user's finger slides off the banner super fast.
         banner.setPointerCapture(e.pointerId); 
     });
 
-    // 2. POINTER MOVE (Replaces touchmove)
     banner.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
         
         currentTranslate = e.clientX - startX;
-        banner.style.transform = `translateX(${currentTranslate}px)`;
+        
+        // --- CRITICAL FIX 2: SAFE TRANSFORM ---
+        // Using calc() ensures that if your banner is centered using -50% X and -50% Y, 
+        // we don't accidentally delete the Y centering when dragging left/right.
+        banner.style.transform = `translate(calc(-50% + ${currentTranslate}px), -50%)`;
         banner.style.opacity = 1 - (Math.abs(currentTranslate) / window.innerWidth);
     });
 
-    // 3. POINTER UP & CANCEL (Replaces touchend)
     const handleRelease = () => {
         if (!isDragging) return;
         isDragging = false;
@@ -738,7 +742,7 @@ function triggerOvertakeEffect(winnerName, loserName) {
         if (Math.abs(currentTranslate) > 75) {
             // Yeet it
             const flyAwayDistance = currentTranslate > 0 ? window.innerWidth : -window.innerWidth;
-            banner.style.transform = `translateX(${flyAwayDistance}px)`;
+            banner.style.transform = `translate(calc(-50% + ${flyAwayDistance}px), -50%)`;
             banner.style.opacity = '0';
             
             setTimeout(() => {
@@ -748,8 +752,8 @@ function triggerOvertakeEffect(winnerName, loserName) {
             if (navigator.vibrate) navigator.vibrate(20); 
             
         } else {
-            // Snap it back
-            banner.style.transform = 'translateX(0px)';
+            // Snap it back to dead center
+            banner.style.transform = 'translate(-50%, -50%)';
             banner.style.opacity = '1';
             
             autoRemoveTimer = setTimeout(() => {
@@ -759,7 +763,7 @@ function triggerOvertakeEffect(winnerName, loserName) {
     };
 
     banner.addEventListener('pointerup', handleRelease);
-    banner.addEventListener('pointercancel', handleRelease); // Catches system interruptions!
+    banner.addEventListener('pointercancel', handleRelease); // Catches the system interruptions
 }
 // --- JUICE: Milestone Nuke ---
 function triggerMilestoneNuke(name, totalVotes) {
