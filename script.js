@@ -189,7 +189,8 @@ let comboTimer;
 let currentFocusId = null;
 let consecutiveClicks = 0;
 const FIRE_THRESHOLD = 50; // Clicks required to ignite
-
+let lastOvertakeTime = 0;
+const OVERTAKE_COOLDOWN = 5000; // 5 seconds
 // Firebase Batching State (Saves free tier)
 let pendingVotes = {}; 
 
@@ -427,18 +428,24 @@ function handleMash(id, e) {
     }
 
     // 5. DID WE OVERTAKE?
-    if (newRank < oldRank) {
+if (newRank < oldRank) {
+    const now = Date.now();
+    // Only trigger if enough time has passed since the last one
+    if (now - lastOvertakeTime > OVERTAKE_COOLDOWN) {
         let winnerName = itemsData[id].name;
         let loserName = itemsArray[newRank + 1].name;
         
         triggerOvertakeEffect(winnerName, loserName);
+        lastOvertakeTime = now; // Reset the cooldown
         
+        // Firebase update...
         setDoc(doc(db, "global", "latest_event"), {
             winner: winnerName,
             loser: loserName,
-            timestamp: Date.now()
+            timestamp: now
         });
     }
+}
     // 6. ARE WE IN A 1v1 CLASH? 
     else if (newRank > 0) {
         let gap = itemsArray[newRank - 1].total - itemsArray[newRank].total;
@@ -685,10 +692,12 @@ window.seedDatabase = async function() {
 function triggerOvertakeEffect(winnerName, loserName) {
     if (document.querySelector('.overtake-wrapper')) return;
 
-    // 1. Create the Wrapper
+    // 1. Lock the scroll so they can't swipe the page away
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     const wrapper = document.createElement('div');
     wrapper.classList.add('overtake-wrapper');
-    
     wrapper.innerHTML = `
         <div class="overtake-ribbon">New Leader: ${winnerName}</div>
         <div class="overtake-popup">
@@ -701,19 +710,15 @@ function triggerOvertakeEffect(winnerName, loserName) {
     const popup = wrapper.querySelector('.overtake-popup');
     const ribbon = wrapper.querySelector('.overtake-ribbon');
 
-    // Haptics
-    if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
-
-    // Timer Management
     let autoRemoveTimer;
-    const startAutoRemove = () => {
-        autoRemoveTimer = setTimeout(closeAll, 2500);
-    };
-
+    const startAutoRemove = () => { autoRemoveTimer = setTimeout(closeAll, 4000); };
+    
     const closeAll = () => {
-        ribbon.style.transition = "transform 0.4s ease-in";
+        // Restore scroll
+        document.body.style.overflow = originalOverflow;
+        
         ribbon.style.transform = "translateY(-100%)";
-        popup.style.transition = "transform 0.3s ease-in, opacity 0.3s";
+        popup.style.transition = "all 0.3s ease-in";
         popup.style.transform = "translate(-50%, -50%) scale(0)";
         popup.style.opacity = "0";
         setTimeout(() => wrapper.remove(), 400);
@@ -721,66 +726,66 @@ function triggerOvertakeEffect(winnerName, loserName) {
 
     startAutoRemove();
 
-    // Swipe Logic
-    let startX, startY, isDragging = false, hasSwiped = false;
-    const threshold = 15;
+    let startX, startY, startTime, isDragging = false;
 
     popup.addEventListener('pointerdown', (e) => {
-        clearTimeout(autoRemoveTimer); // Stop the clock the moment they touch it
+        // Prevent default to stop browser from thinking we're selecting text or scrolling
+        e.preventDefault(); 
+        clearTimeout(autoRemoveTimer);
         isDragging = true;
-        hasSwiped = false;
         startX = e.clientX;
         startY = e.clientY;
+        startTime = Date.now();
         popup.setPointerCapture(e.pointerId);
+        popup.style.transition = "none"; 
+        popup.style.cursor = 'grabbing';
     });
 
     popup.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
-
+        
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-
-        if (!hasSwiped && dist > threshold) {
-            hasSwiped = true;
-            // Freeze the animation state
-            const style = window.getComputedStyle(popup);
-            popup.style.animation = 'none';
-            popup.style.transform = style.transform;
-            popup.style.transition = 'none';
-        }
-
-        if (hasSwiped) {
-            const rotation = dx * 0.1;
-            const opacity = 1 - (Math.abs(dx) / (window.innerWidth / 1.1));
-            popup.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${rotation}deg) scale(1)`;
-            popup.style.opacity = opacity;
-        }
+        
+        // Visuals: Make it follow the finger more aggressively
+        const rotation = dx * 0.15;
+        // We use translate3d for hardware acceleration (smoother on mobile)
+        popup.style.transform = `translate3d(calc(-50% + ${dx}px), calc(-50% + ${dy}px), 0) rotate(${rotation}deg)`;
+        popup.style.opacity = 1 - (Math.abs(dx) / 700);
     });
 
     popup.addEventListener('pointerup', (e) => {
         if (!isDragging) return;
         isDragging = false;
         popup.releasePointerCapture(e.pointerId);
+        popup.style.cursor = 'grab';
 
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
+        const elapsed = Date.now() - startTime;
+        // Velocity: pixels per ms
+        const velocity = Math.sqrt(dx*dx + dy*dy) / elapsed; 
 
-        if (hasSwiped && (Math.abs(dx) > 100 || Math.abs(dy) > 100)) {
-            // YEET IT
+        // Lower thresholds for mobile: 50px or decent speed
+        if (Math.abs(dx) > 50 || Math.abs(dy) > 50 || velocity > 0.4) {
             const angle = Math.atan2(dy, dx);
-            const x = Math.cos(angle) * 1000;
-            const y = Math.sin(angle) * 1000;
-            popup.style.transition = "transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s";
-            popup.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${dx * 0.2}deg)`;
+            // Increase move distance to 1500 to ensure it's gone
+            const moveX = Math.cos(angle) * 1500; 
+            const moveY = Math.sin(angle) * 1500;
+
+            popup.style.transition = "transform 0.5s cubic-bezier(0.1, 0.5, 0.1, 1), opacity 0.3s";
+            popup.style.transform = `translate3d(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px), 0) rotate(${dx * 0.5}deg)`;
             popup.style.opacity = "0";
-            setTimeout(closeAll, 100); // Start closing the ribbon too
+            
+            // Allow clicking through to game immediately after yeet
+            wrapper.style.pointerEvents = 'none'; 
+            setTimeout(closeAll, 100); 
         } else {
             // SNAP BACK
-            popup.style.transition = "transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s";
-            popup.style.transform = "translate(-50%, -50%) rotate(0deg) scale(1)";
+            popup.style.transition = "transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s";
+            popup.style.transform = "translate3d(-50%, -50%, 0) rotate(0deg)";
             popup.style.opacity = "1";
-            startAutoRemove(); // Restart the clock
+            startAutoRemove();
         }
     });
 }
