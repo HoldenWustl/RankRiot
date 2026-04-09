@@ -453,7 +453,10 @@ h1.title {
 
 .overtake-popup h1 { font-family: 'Anton', sans-serif; font-size: 3.5rem; margin: 0; text-shadow: 3px 3px 0 #000; color: white; }
 .overtake-popup p { font-size: 1.2rem; font-weight: bold; margin: 10px 0 0 0; color: white; }
-
+.list-item {
+    will-change: transform;
+    position: relative;
+}
 .overtake-popup:active {
     cursor: grabbing;
 }
@@ -470,7 +473,14 @@ h1.title {
 .list-item.flash-hit {
     animation: hitFlash 0.1s ease-out;
 }
-
+.list-item.reordering,
+.list-item.reordering.rank-one,
+.list-item.reordering.clashing,
+.list-item.reordering.flash-hit,
+.list-item.reordering.on-fire,
+.list-item.reordering.taking-damage {
+    animation: none !important;
+}
 @keyframes hitFlash {
     0% { background: white; transform: scale(1.02); }
     100% { background: rgba(17, 17, 26, 0.5); transform: scale(1); }

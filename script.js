@@ -240,39 +240,34 @@ function loadBattlefield(categoryName) {
             document.body.setAttribute('data-winner', updatedItems[0].id);
         }
 
-        updatedItems.forEach((item, index) => {
-            itemsData[item.id] = item;
-            
-            // 3. Create DOM if needed
-            let itemEl = document.getElementById(`item-${item.id}`);
-            if (!itemEl) {
-                // THE FIX: We are finally passing item.imageUrl here!
-                itemEl = createItemElement(item.id, item.name, item.imageUrl);
-                rankingList.appendChild(itemEl);
-            }
-            
-            // 4. JUICY: Smooth reordering
-            itemEl.style.order = index;
-            itemEl.querySelector('.rank-number').innerText = (index + 1);
-            
-            // Special styling for Top 3
-            if(index === 0) {
-                // ADD THE JUICE
-                itemEl.classList.add('rank-one');
-                itemEl.style.borderColor = 'transparent'; // Let CSS handle the borders now
-            } else {
-                // REMOVE THE JUICE IF THEY LOSE 1ST PLACE
-                itemEl.classList.remove('rank-one');
-                
-                if (index === 1) itemEl.style.borderColor = '#C0C0C0'; // Silver
-                else if (index === 2) itemEl.style.borderColor = '#CD7F32'; // Bronze
-                else itemEl.style.borderColor = 'transparent'; // Normal
-            }
+        animateRankReorder(rankingList, () => {
+    updatedItems.forEach((item, index) => {
+        itemsData[item.id] = item;
 
-            // 5. Update votes
-            const localBuffer = pendingVotes[item.id] || 0;
-            itemEl.querySelector('.item-votes').innerText = (item.votes + localBuffer).toLocaleString() + ' VOTES';
-        });
+        let itemEl = document.getElementById(`item-${item.id}`);
+        if (!itemEl) {
+            itemEl = createItemElement(item.id, item.name, item.imageUrl);
+            rankingList.appendChild(itemEl);
+        }
+
+        itemEl.style.order = index;
+        itemEl.querySelector('.rank-number').innerText = (index + 1);
+
+        if (index === 0) {
+            itemEl.classList.add('rank-one');
+            itemEl.style.borderColor = 'transparent';
+        } else {
+            itemEl.classList.remove('rank-one');
+            if (index === 1) itemEl.style.borderColor = '#C0C0C0';
+            else if (index === 2) itemEl.style.borderColor = '#CD7F32';
+            else itemEl.style.borderColor = 'transparent';
+        }
+
+        const localBuffer = pendingVotes[item.id] || 0;
+        itemEl.querySelector('.item-votes').innerText =
+            (item.votes + localBuffer).toLocaleString() + ' VOTES';
+    });
+});
     });
 }
 
@@ -970,3 +965,38 @@ window.shareReceiptImage = async function() {
     shareBtn.style.display = 'block';
     closeBtn.style.display = 'block';
 };
+function animateRankReorder(listEl, mutateDom) {
+    const items = [...listEl.querySelectorAll('.list-item')];
+
+    // First: record old positions
+    const firstRects = new Map();
+    items.forEach(el => {
+        firstRects.set(el.id, el.getBoundingClientRect());
+    });
+
+    // Apply the DOM/order changes
+    mutateDom();
+
+    // Force layout
+    listEl.offsetHeight;
+
+    // Last: measure new positions, then invert
+    items.forEach(el => {
+        const first = firstRects.get(el.id);
+        const last = el.getBoundingClientRect();
+        if (!first || !last) return;
+
+        const dx = first.left - last.left;
+        const dy = first.top - last.top;
+
+        if (dx || dy) {
+            el.style.transition = 'none';
+            el.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+
+            requestAnimationFrame(() => {
+                el.style.transition = 'transform 420ms cubic-bezier(0.22, 1, 0.36, 1)';
+                el.style.transform = '';
+            });
+        }
+    });
+}
