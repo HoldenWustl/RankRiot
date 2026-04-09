@@ -14,6 +14,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// --- AUDIO ARSENAL ---
+// You can replace these URLs with local files later (e.g., 'sounds/start.mp3')
+const sfxStart = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'); // Arcade start
+const sfxMenu = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'); // UI Click
+const sfxOvertake = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3'); // Whoosh / Level up
+sfxOvertake.volume = 0.25;
+// This function resets the sound to 0ms every time it plays, allowing fast spamming!
+function playSound(audioClip) {
+    audioClip.currentTime = 0; 
+    audioClip.play().catch(e => console.log("Browser blocked auto-play until user clicks:", e));
+}
+
 // --- UI / Screen Management ---
 const screens = {
     splash: document.getElementById('splash-screen'),
@@ -102,18 +114,24 @@ function fireGlobalBanner(message) {
     globalTickerText.innerText = message;
     globalTickerContainer.classList.remove('hidden');
     
-    // Restart the CSS animation
+    // 1. Reset both animations
     globalTickerText.style.animation = 'none';
+    globalTickerContainer.style.animation = 'none';
     void globalTickerText.offsetWidth; // Trigger reflow
-    globalTickerText.style.animation = 'rushAcross 4s linear forwards';
+    
+    // 2. TEXT ANIMATION: Put back the scrolling marquee (Sped up slightly to 3.5s)
+    globalTickerText.style.animation = 'rushAcross 3.5s linear forwards';
+    
+    // 3. CONTAINER ANIMATION: Make the banner background fade in and out smoothly
+    globalTickerContainer.style.animation = 'popupContainerFade 3.5s ease-in-out forwards';
 
-    // Huge haptic feedback for massive events
+    // Massive haptic feedback
     if(navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
 
-    // Hide it after it scrolls past
+    // 4. Clean up the DOM right AFTER the 3.5s animations finish
     setTimeout(() => {
         globalTickerContainer.classList.add('hidden');
-    }, 4500);
+    }, 3600);
 }
 function playPopSound(multiplier) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -149,6 +167,7 @@ function showScreen(screenName) {
 
 // --- Navigation Events ---
 document.getElementById('play-btn').addEventListener('click', () => {
+  playSound(sfxStart);
     // Add a satisfying click feel even to entry
     if(navigator.vibrate) navigator.vibrate([30, 10, 30]);
     showScreen('category');
@@ -158,6 +177,7 @@ document.getElementById('play-btn').addEventListener('click', () => {
 });
 
 document.getElementById('back-btn').addEventListener('click', () => {
+  playSound(sfxMenu); // Snappy UI click
     if (activeListener) activeListener(); // Stop listening to Firebase
     showScreen('category');
     currentCategory = null;
@@ -167,6 +187,7 @@ document.getElementById('back-btn').addEventListener('click', () => {
 // Category Selection
 document.querySelectorAll('.cat-card').forEach(card => {
     card.addEventListener('click', (e) => {
+      playSound(sfxMenu); // Snappy UI click
         // Handle clicking parent or child elements
         const target = e.currentTarget;
         currentCategory = target.getAttribute('data-list');
@@ -225,6 +246,9 @@ function loadBattlefield(categoryName) {
     comboClicks = 0;
     resetComboUI();
 
+    // --- SOUND LOGIC: 1. Create a memory bank to remember the order ---
+    let previousOrder = [];
+
     // Start live listener
     activeListener = onSnapshot(listRef, (snapshot) => {
         let updatedItems = [];
@@ -234,6 +258,19 @@ function loadBattlefield(categoryName) {
         
         // 1. Sort by votes (descending)
         updatedItems.sort((a, b) => b.votes - a.votes);
+
+        // --- SOUND LOGIC: 2. Extract the new winning order ---
+        const newOrder = updatedItems.map(item => item.id);
+
+        // --- SOUND LOGIC: 3. Check for an overtake! ---
+        // If we have a previous order, and the new order is different, someone got passed!
+        if (previousOrder.length > 0 && previousOrder.join(',') !== newOrder.join(',')) {
+            playSound(sfxOvertake); // Trigger the Whoosh/Level up sound!
+            if(navigator.vibrate) navigator.vibrate([50, 100, 50]); // Extra phone rumble
+        }
+
+        // --- SOUND LOGIC: 4. Save this new order for the next time Firebase updates ---
+        previousOrder = newOrder;
         
         // 2. Map rank #1 to the top item's ID so we know who is winning
         if (updatedItems[0]) {
@@ -241,33 +278,38 @@ function loadBattlefield(categoryName) {
         }
 
         animateRankReorder(rankingList, () => {
-    updatedItems.forEach((item, index) => {
-        itemsData[item.id] = item;
+            updatedItems.forEach((item, index) => {
+                itemsData[item.id] = item;
 
-        let itemEl = document.getElementById(`item-${item.id}`);
-        if (!itemEl) {
-            itemEl = createItemElement(item.id, item.name, item.imageUrl);
-            rankingList.appendChild(itemEl);
-        }
+                let itemEl = document.getElementById(`item-${item.id}`);
+                if (!itemEl) {
+                    itemEl = createItemElement(item.id, item.name, item.imageUrl);
+                    rankingList.appendChild(itemEl);
+                    
+                    // --- JUICE: STAGGERED ENTRANCE ANIMATION ---
+                    // We use the 'index' to delay each item slightly more than the last
+                    itemEl.style.animation = `popInStagger 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards`;
+                    itemEl.style.animationDelay = `${index * 0.06}s`; // 60ms gap between each card
+                }
 
-        itemEl.style.order = index;
-        itemEl.querySelector('.rank-number').innerText = (index + 1);
+                itemEl.style.order = index;
+                itemEl.querySelector('.rank-number').innerText = (index + 1);
 
-        if (index === 0) {
-            itemEl.classList.add('rank-one');
-            itemEl.style.borderColor = 'transparent';
-        } else {
-            itemEl.classList.remove('rank-one');
-            if (index === 1) itemEl.style.borderColor = '#C0C0C0';
-            else if (index === 2) itemEl.style.borderColor = '#CD7F32';
-            else itemEl.style.borderColor = 'transparent';
-        }
+                if (index === 0) {
+                    itemEl.classList.add('rank-one');
+                    itemEl.style.borderColor = 'transparent';
+                } else {
+                    itemEl.classList.remove('rank-one');
+                    if (index === 1) itemEl.style.borderColor = '#C0C0C0';
+                    else if (index === 2) itemEl.style.borderColor = '#CD7F32';
+                    else itemEl.style.borderColor = 'transparent';
+                }
 
-        const localBuffer = pendingVotes[item.id] || 0;
-        itemEl.querySelector('.item-votes').innerText =
-            (item.votes + localBuffer).toLocaleString() + ' VOTES';
-    });
-});
+                const localBuffer = pendingVotes[item.id] || 0;
+                itemEl.querySelector('.item-votes').innerText =
+                    (item.votes + localBuffer).toLocaleString() + ' VOTES';
+            });
+        });
     });
 }
 

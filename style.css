@@ -979,7 +979,24 @@ button.screenshot-hint:active {
     text-transform: uppercase;
     letter-spacing: 1px;
 }
-
+/* --- JUICY LIST LOADING ANIMATION --- */
+@keyframes popInStagger {
+    0% { 
+        transform: translateX(100px) scale(0.8) skewX(-10deg); 
+        opacity: 0; 
+    }
+    100% { 
+        transform: translateX(0) scale(1) skewX(0deg); 
+        opacity: 1; 
+    }
+}
+/* --- IN-GAME POPUP BANNER BACKGROUND FADE --- */
+@keyframes popupContainerFade {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    85% { opacity: 1; } /* Holds solid while the text is scrolling */
+    100% { opacity: 0; } /* Smoothly fades away at the end */
+}
 /* Because we duplicated the text in the HTML, 
   we only need to slide it left by 50% to create a perfect loop! 
 */
