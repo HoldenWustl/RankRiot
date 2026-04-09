@@ -690,7 +690,19 @@ window.seedDatabase = async function() {
 };
 
 let activeOvertakeCleanupTimer = null;
+let lastTouchEnd = 0;
 
+document.addEventListener(
+  'touchend',
+  (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  },
+  { passive: false }
+);
 function triggerOvertakeEffect(winnerName, loserName) {
     const existing = document.querySelector('.overtake-wrapper');
     if (existing) existing.remove();
