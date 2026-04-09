@@ -1,0 +1,914 @@
+/* --- Global & Mobile Overhaul --- */
+:root {
+    --bg: #030308;
+    --riot-pink: #ff0055;
+    --riot-blue: #00e5ff;
+    --dark-accent: #11111a;
+    --text: #ffffff;
+    --text-muted: #888899;
+}
+
+body, html {
+    margin: 0; padding: 0;
+    font-family: 'Barlow Condensed', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    user-select: none;
+    touch-action: manipulation; /* Removes 300ms tap delay */
+    -webkit-tap-highlight-color: transparent;
+}
+
+.screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 500px; /* Slimmer for phone aesthetics */
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+}
+
+.hidden { display: none !important; }
+
+/* --- Juicy Typography --- */
+h1.title {
+    font-family: 'Anton', sans-serif;
+    font-size: 5rem;
+    font-weight: 900;
+    margin: 25vh 0 10px 0;
+    letter-spacing: -2px;
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+}
+
+.title .riot-glow {
+    color: var(--riot-pink);
+    position: relative;
+}
+
+/* Background orb animation on title screen */
+.glow-wrapper { position: relative; }
+.glow-orb {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px; height: 150px;
+    background: var(--riot-pink);
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.7;
+    animation: pulse 2s infinite;
+    z-index: -1;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    letter-spacing: 4px;
+    font-weight: bold;
+    margin-bottom: 50px;
+}
+
+/* --- The Glow Button --- */
+.glow-btn {
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    padding: 18px 50px;
+    background: transparent;
+    border: 2px solid var(--riot-pink);
+    color: var(--riot-pink);
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
+    transition: all 0.1s ease;
+    animation: btnPulse 1.5s infinite;
+}
+
+.glow-btn:active {
+    transform: scale(0.95);
+    background: var(--riot-pink);
+    color: white;
+}
+
+/* --- sleek Category Cards --- */
+.header-text { margin-top: 50px; margin-left: 20px; color: var(--riot-blue); font-size: 1.2rem; letter-spacing: 2px; }
+.category-list { width: 90%; display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
+
+.cat-card {
+    background: rgba(17, 17, 26, 0.8);
+    border: 1px solid #333;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: all 0.1s ease;
+}
+
+.cat-card:active {
+    transform: scale(0.97);
+    border-color: var(--riot-blue);
+    background: rgba(0, 229, 255, 0.1);
+}
+
+.cat-icon { font-size: 1.8rem; margin-right: 15px; }
+.cat-name { flex-grow: 1; font-size: 1.4rem; font-weight: bold; }
+.cat-arrow { color: #555; }
+
+/* --- Game Screen: Sticky Header --- */
+#sticky-header {
+    position: sticky; top: 0;
+    background: rgba(3, 3, 8, 0.95);
+    backdrop-filter: blur(10px);
+    width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+    z-index: 100;
+    border-bottom: 1px solid #333;
+    display: flex; flex-direction: column; align-items: center;
+}
+
+#back-btn { position: absolute; left: 15px; top: 20px; background: transparent; color: #555; border: none; font-weight: bold; }
+#current-list-title { margin: 0 0 10px 0; font-family: 'Anton', sans-serif; font-size: 1.8rem; letter-spacing: 1px; color: white;}
+
+/* Combo / Fever Bar */
+#combo-container { width: 100%; text-align: center; }
+#combo-bar-bg { height: 6px; width: 90%; background: #222; border-radius: 10px; margin: 0 auto 5px auto; overflow: hidden; }
+#combo-bar-fill { height: 100%; width: 0%; background: var(--riot-blue); transition: width 0.1s linear, background-color 0.2s; }
+#combo-text { font-size: 0.9rem; font-weight: bold; color: var(--riot-blue); text-transform: uppercase; letter-spacing: 1px;}
+
+/* --- Ranking List & Items --- */
+#ranking-list {
+    display: flex; flex-direction: column;
+    width: 100%; padding: 10px; box-sizing: border-box; gap: 8px;
+    padding-bottom: 30vh; /* space to scroll */
+}
+
+.list-item {
+    background: rgba(17, 17, 26, 0.5);
+    border: 1px solid transparent;
+    border-bottom: 1px solid #1a1a1a;
+    display: flex; align-items: center;
+    padding: 10px;
+    transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); /* Bouncy reordering */
+}
+
+/* Rank Number styling */
+.rank-number {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.8rem; color: #333;
+    width: 35px; text-align: center;
+    margin-right: 10px;
+}
+
+/* --- Headshot Image --- */
+.item-pic {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    margin-right: 15px;
+    border: 2px solid #222;
+    object-fit: cover;
+}
+/* =========================================
+   🔥 DOPAMINE INJECTIONS & JUICE
+   ========================================= */
+
+/* 1. Title Screen Idle Animations (Make it breathe) */
+#splash-screen h1 {
+    animation: float 3s ease-in-out infinite;
+    text-shadow: 0 0 20px rgba(255, 0, 85, 0.5); /* Assuming your accent is still pink/red */
+}
+
+#splash-screen button {
+    animation: heartbeat 2s infinite;
+    box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+@keyframes heartbeat {
+    0% { transform: scale(1); }
+    5% { transform: scale(1.08); }
+    10% { transform: scale(1); }
+    15% { transform: scale(1.08); }
+    20%, 100% { transform: scale(1); }
+}
+
+/* 2. Category Select Screen (Bouncy & Alive) */
+#category-screen button {
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#category-screen button:hover {
+    transform: scale(1.05) translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    filter: brightness(1.2);
+}
+/* --- FIX: Prevent list from hiding behind the bottom banner --- */
+.category-list {
+  width: 100%;
+    /* Add enough space at the bottom to clear the ticker banner */
+    padding-bottom: 80px; 
+    
+    /* Make sure the list itself is scrollable if they have a small screen */
+    overflow-y: auto;
+    
+    /* Hide the scrollbar for a cleaner arcade look */
+    scrollbar-width: none; 
+}
+.category-list::-webkit-scrollbar {
+    display: none;
+}
+/* 3. The MASH Button (Satisfying punch when clicked) */
+.mash-btn {
+    transition: transform 0.05s ease, filter 0.1s ease;
+}
+
+.mash-btn:active {
+    transform: scale(0.85); /* Deep compress on click */
+    filter: brightness(1.5);
+}
+
+/* 4. NUMBER ONE SPOT - ABSOLUTE GLORY */
+.list-item.rank-one {
+    z-index: 10;
+    /* Gentle idle shake + intense pulsing glow */
+    animation: crown-glow 2s ease-in-out infinite, gentle-shake 4s infinite;
+    border: 3px solid #FFD700 !important; /* Thick Gold */
+    background: linear-gradient(145deg, #2a2a2a, #3a2e00); /* Subtle gold tint to the card */
+}
+
+/* Make the rank number pop more for #1 */
+.list-item.rank-one .rank-number {
+    color: #FFD700;
+    text-shadow: 0 0 10px #FFD700;
+    transform: scale(1.2);
+}
+
+@keyframes crown-glow {
+    0%, 100% { box-shadow: 0 0 15px 2px rgba(255, 215, 0, 0.4), inset 0 0 10px rgba(255, 215, 0, 0.1); }
+    50% { box-shadow: 0 0 35px 12px rgba(255, 215, 0, 0.8), inset 0 0 25px rgba(255, 215, 0, 0.3); }
+}
+
+@keyframes gentle-shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-1deg); }
+    75% { transform: rotate(1deg); }
+}
+.item-info { flex-grow: 1; }
+.item-name { font-size: 1.2rem; font-weight: bold; margin: 0 0 2px 0; color: white; }
+.item-votes { font-size: 0.9rem; color: var(--riot-blue); margin: 0; font-family: monospace;}
+
+/* --- The 3D JUICY MASH BUTTON --- */
+.mash-btn-wrapper {
+    perspective: 1000px; /* needed for 3D effect */
+}
+
+.mash-btn {
+    background: var(--riot-pink);
+    color: white;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    border-radius: 8px;
+    padding: 15px 18px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    cursor: pointer;
+    text-transform: uppercase;
+    
+    /* 3D button effect */
+    transform-style: preserve-3d;
+    box-shadow: 
+        0 0 10px rgba(255, 0, 85, 0.5), /* Neon glow */
+        0 6px 0 #cc0044; /* Button depth */
+    transition: all 0.05s ease;
+}
+
+.mash-btn:active {
+    transform: translateY(6px); /* Depress the button */
+    box-shadow: 
+        0 0 20px rgba(255, 0, 85, 0.8), /* Intense glow on hit */
+        0 0 0 #cc0044; /* Bottom disappears */
+    filter: brightness(1.2);
+}
+
+/* --- Visual Carnage & Animations --- */
+
+/* Floating Numbers (+1, +10) */
+.floating-number {
+    position: fixed;
+    font-family: 'Anton', sans-serif;
+    font-weight: 900;
+    pointer-events: none;
+    animation: floatUp 0.6s ease-out forwards;
+    z-index: 1000;
+    -webkit-text-stroke: 1px black; /* Outline for readability */
+}
+
+@keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(-120px) scale(1.8) rotate(var(--rand-rotate)); }
+}
+
+/* Fever Mode Screen Shake & Border Pulse */
+.shake { animation: shaking 0.1s infinite; }
+.fever-pulse {
+    box-shadow: inset 0 0 50px rgba(255, 0, 85, 0.3);
+    border: 2px solid rgba(255, 0, 85, 0.5);
+}
+
+@keyframes shaking {
+    0% { transform: translate(2px, 2px); }
+    50% { transform: translate(-3px, -1px); }
+    100% { transform: translate(1px, -2px); }
+}
+
+@keyframes pulse {
+    0% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.2); }
+    100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes btnPulse {
+    0% { box-shadow: 0 0 10px rgba(255, 0, 85, 0.2); }
+    50% { box-shadow: 0 0 25px rgba(255, 0, 85, 0.6); }
+    100% { box-shadow: 0 0 10px rgba(255, 0, 85, 0.2); }
+}
+
+/* Ambient Particles on Title Screen */
+.ambient-p {
+    position: fixed;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+    animation: floatParticle linear infinite;
+}
+
+@keyframes floatParticle {
+    0% { transform: translateY(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-100vh); opacity: 0; }
+}
+
+/* --- THE 1V1 CLASH MODE --- */
+#ranking-list.list-dimmed .list-item:not(.clashing) {
+    opacity: 0.2;
+    transform: scale(0.9);
+    filter: grayscale(100%);
+}
+
+.list-item.clashing {
+    transform: scale(1.05);
+    z-index: 50;
+    box-shadow: 0 0 25px var(--riot-pink);
+    border: 2px solid var(--riot-pink) !important;
+    animation: clashShake 0.15s infinite;
+}
+
+@keyframes clashShake {
+    0% { transform: scale(1.05) translate(1px, 1px); }
+    50% { transform: scale(1.05) translate(-2px, -1px); }
+    100% { transform: scale(1.05) translate(1px, -2px); }
+}
+
+/* --- EXPLOSIVE OVERTAKE BANNER --- */
+.overtake-banner {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 0, 85, 0.95);
+    border: 4px solid white;
+    padding: 30px; border-radius: 20px;
+    text-align: center; z-index: 9999;
+    box-shadow: 0 0 80px #ff0055;
+    pointer-events: none;
+    animation: explodeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.overtake-banner h1 { font-family: 'Anton', sans-serif; font-size: 4rem; margin: 0; text-shadow: 4px 4px 0 #000; }
+.overtake-banner p { font-size: 1.5rem; font-weight: bold; margin: 10px 0 0 0; }
+
+@keyframes explodeIn {
+    0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+}
+/* --- JUICY CARD FLASH --- */
+.list-item.flash-hit {
+    animation: hitFlash 0.1s ease-out;
+}
+
+@keyframes hitFlash {
+    0% { background: white; transform: scale(1.02); }
+    100% { background: rgba(17, 17, 26, 0.5); transform: scale(1); }
+}
+/* --- IDLE DOPAMINE: LIQUID NEON BACKGROUND --- */
+body {
+    /* Overwrite the old background color with a massive animated gradient */
+    background: linear-gradient(-45deg, #05050a, #1a000d, #00121a, #0d001a);
+    background-size: 400% 400%;
+    animation: liquidBg 15s ease infinite;
+}
+
+@keyframes liquidBg {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* --- IDLE DOPAMINE: BREATHING CARDS --- */
+.list-item {
+    /* Adds a very slow, passive pulse to every item even when untouched */
+    animation: passiveBreathe 4s infinite alternate;
+}
+
+@keyframes passiveBreathe {
+    0% { box-shadow: 0 0 0px transparent; }
+    100% { box-shadow: 0 0 15px rgba(0, 229, 255, 0.1); }
+}
+
+/* --- GLOBAL ALERTS BANNER --- */
+#global-ticker-container {
+    position: fixed;
+    top: 15vh; /* Floats near the top */
+    width: 100vw;
+    background: rgba(255, 0, 85, 0.95);
+    border-top: 4px solid white;
+    border-bottom: 4px solid white;
+    z-index: 99999;
+    padding: 15px 0;
+    box-shadow: 0 0 50px #ff0055;
+    transform: skewY(-2deg); /* Edgy tilt */
+    pointer-events: none;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+#global-ticker-text {
+    font-family: 'Anton', sans-serif;
+    font-size: 3.5rem;
+    color: white;
+    text-shadow: 3px 3px 0 #000;
+    display: inline-block;
+    /* This animation is applied dynamically in JS so it restarts cleanly */
+}
+
+@keyframes rushAcross {
+    0% { transform: translateX(100vw); }
+    100% { transform: translateX(-150%); } /* Scrolls all the way off left */
+}
+/* --- THE MILESTONE NUKE --- */
+.milestone-banner {
+    position: fixed; top: 40%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: radial-gradient(circle, #FFD700 0%, #cc8800 100%);
+    color: black;
+    padding: 40px 60px;
+    border-radius: 30px;
+    text-align: center;
+    z-index: 100000;
+    box-shadow: 0 0 100px #FFD700, inset 0 0 20px white;
+    pointer-events: none;
+    animation: nukeExplode 2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.milestone-banner h1 { 
+    font-family: 'Anton', sans-serif; 
+    font-size: 6rem; 
+    margin: 0; 
+    text-transform: uppercase;
+    text-shadow: 4px 4px 0 #fff;
+}
+
+.milestone-banner p { 
+    font-size: 2rem; 
+    font-weight: 900; 
+    margin: 0; 
+    letter-spacing: 2px;
+}
+
+/* Blinding flash overlay */
+.flash-bang {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: white;
+    z-index: 99999;
+    pointer-events: none;
+    animation: flashFade 0.8s ease-out forwards;
+}
+
+@keyframes nukeExplode {
+    0% { transform: translate(-50%, -50%) scale(0) rotate(-15deg); opacity: 0; }
+    15% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); opacity: 1; }
+    25% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+    80% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.5) translateY(100vh); opacity: 0; }
+}
+
+@keyframes flashFade {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
+/* --- ON FIRE MODE --- */
+.list-item.on-fire {
+    /* Violent shaking and pulsing background */
+    animation: burnBg 0.4s infinite alternate, intenseShake 0.15s infinite;
+    border: 3px solid #ff4500 !important;
+    box-shadow: 0 0 30px #ff4500, inset 0 0 20px #ff0000 !important;
+    z-index: 5;
+}
+
+/* Deep-fry the portrait */
+.list-item.on-fire .item-pic {
+    filter: contrast(1.8) saturate(2.5) hue-rotate(-15deg) drop-shadow(0 0 15px red);
+}
+
+/* Glowing text */
+.list-item.on-fire .item-name {
+    color: #fff;
+    text-shadow: 0 0 10px #ff4500, 0 0 20px #ff0000;
+}
+
+/* Victim Splash Damage Effect */
+.list-item.taking-damage {
+    animation: damageFlash 0.2s ease-out;
+    filter: grayscale(80%) brightness(0.6);
+    transform: scale(0.98);
+}
+
+@keyframes burnBg {
+    0% { background-color: rgba(255, 69, 0, 0.1); }
+    100% { background-color: rgba(255, 0, 0, 0.35); }
+}
+
+@keyframes intenseShake {
+    0% { transform: translate(2px, 1px) rotate(0deg); }
+    25% { transform: translate(-2px, -2px) rotate(-1deg); }
+    50% { transform: translate(-2px, 1px) rotate(1deg); }
+    75% { transform: translate(2px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+@keyframes damageFlash {
+    0% { background-color: #ff0000; box-shadow: inset 0 0 30px #ff0000; }
+    100% { background-color: transparent; box-shadow: none; }
+}
+/* =========================================
+   🔥 CATEGORY SCREEN JUICE
+   ========================================= */
+
+/* The Glitching Header */
+.glitch-text {
+    font-family: 'Anton', sans-serif;
+    font-size: 2.5rem;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 3px 3px 0px var(--riot-pink), -3px -3px 0px var(--riot-blue);
+    animation: subtleGlitch 1.5s infinite;
+}
+
+@keyframes subtleGlitch {
+    0%, 100% { transform: translate(0); text-shadow: 3px 3px 0 var(--riot-pink), -3px -3px 0 var(--riot-blue); }
+    20% { transform: translate(-2px, 1px); }
+    40% { transform: translate(2px, -1px); text-shadow: -3px 3px 0 var(--riot-pink), 3px -3px 0 var(--riot-blue); }
+    60% { transform: translate(-1px, 2px); }
+    80% { transform: translate(1px, -2px); }
+}
+
+/* The Fighter Cards */
+.cat-card {
+    position: relative;
+    background: rgba(10, 10, 15, 0.85);
+    border: 2px solid #333;
+    border-left: 6px solid var(--card-color); /* Thematic color stripe */
+    border-radius: 12px;
+    padding: 25px 20px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    
+    /* The Entrance Animation! They slam in from the left */
+    animation: cardSlam 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+}
+
+/* Stagger the slams so they hit one after another */
+.cat-card:nth-child(1) { animation-delay: 0.1s; }
+.cat-card:nth-child(2) { animation-delay: 0.2s; }
+.cat-card:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes cardSlam {
+    0% { transform: scale(0.5) translateX(-150px) rotate(-10deg); opacity: 0; }
+    100% { transform: scale(1) translateX(0) rotate(0deg); opacity: 1; }
+}
+
+/* Holographic Glare Sweep */
+.card-glare {
+    position: absolute;
+    top: 0; left: -150%;
+    width: 50%; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent);
+    transform: skewX(-25deg);
+    animation: glareSweep 4s infinite;
+    pointer-events: none;
+}
+
+@keyframes glareSweep {
+    0% { left: -150%; }
+    20% { left: 200%; }
+    100% { left: 200%; } /* Pauses off-screen for a realistic sheen rate */
+}
+
+/* Card Typography & Icons */
+.cat-icon {
+    font-size: 2.8rem;
+    margin-right: 20px;
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+    /* Float gently while idle */
+    animation: iconFloat 2s ease-in-out infinite alternate;
+}
+
+@keyframes iconFloat {
+    0% { transform: translateY(0px) scale(1); }
+    100% { transform: translateY(-6px) scale(1.1); }
+}
+
+.cat-name {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.8rem;
+    color: white;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    flex-grow: 1;
+}
+
+.cat-arrow {
+    font-size: 1.5rem;
+    opacity: 0.2;
+    filter: grayscale(100%);
+    transition: all 0.2s ease;
+}
+
+/* --- THE HOVER & ACTIVE DOPAMINE --- */
+.cat-card:hover, .cat-card:active {
+    transform: scale(1.03) translateY(-5px);
+    border-color: var(--card-color);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 20px var(--card-color);
+    background: rgba(20, 20, 30, 0.95);
+}
+
+.cat-card:hover .cat-arrow, .cat-card:active .cat-arrow {
+    opacity: 1;
+    filter: grayscale(0%);
+    transform: translateX(10px) scale(1.3);
+}
+
+.cat-card:active {
+    transform: scale(0.95); /* Punches in when clicked */
+}
+/* --- VIRAL SHARE BUTTONS (REDESIGNED) --- */
+
+/* Container to stop overlapping on the splash screen */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; /* Perfect spacing between Enter and Share */
+    margin-top: 30px;
+}
+
+.viral-share-btn {
+    background: transparent;
+    color: #ff0055; /* Neon Pink */
+    font-family: 'Anton', sans-serif;
+    font-size: 1.1rem;
+    padding: 12px 30px;
+    border: 2px solid #ff0055;
+    border-radius: 30px; /* Sleek pill shape */
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 0 15px rgba(255, 0, 85, 0.2), inset 0 0 10px rgba(255, 0, 85, 0.1);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.viral-share-btn:hover, .viral-share-btn:active {
+    transform: scale(1.05);
+    background: rgba(255, 0, 85, 0.1);
+    box-shadow: 0 0 25px rgba(255, 0, 85, 0.5), inset 0 0 15px rgba(255, 0, 85, 0.2);
+    text-shadow: 0 0 8px #ff0055;
+}
+
+.share-icon {
+    font-size: 1.2rem;
+    filter: drop-shadow(0 0 5px rgba(255, 0, 85, 0.5));
+}
+
+/* --- Game Screen Specific Fix --- */
+
+
+.game-share .share-icon {
+    filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.5));
+}
+
+.game-share:hover, .game-share:active {
+    transform: translateY(-50%) scale(1.05); /* Keeps it vertically centered while scaling */
+    background: rgba(0, 229, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+    text-shadow: 0 0 8px #00e5ff;
+}
+/* --- THE FLOATING ACTION SHARE BUTTON --- */
+/* --- THE FLOATING ACTION SHARE BUTTON (FIXED POS) --- */
+.game-share {
+    position: fixed;
+    bottom: 25px;
+    left: 15px; /* Moved to the bottom left! */
+    transform: none; /* Removed the centering hack */
+    z-index: 1000;
+    padding: 12px 20px;
+    border-radius: 50px;
+    background: rgba(10, 10, 15, 0.95);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 229, 255, 0.3);
+    white-space: nowrap; 
+    animation: floatLeftBounce 3s ease-in-out infinite;
+}
+
+/* Updated animation since we removed the horizontal centering */
+@keyframes floatLeftBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* --- THE RIVALRY RECEIPT MODAL --- */
+#receipt-modal {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    z-index: 999999;
+    display: flex; justify-content: center; align-items: center;
+}
+
+.receipt-card {
+    background: linear-gradient(135deg, #1a000d, #00121a);
+    border: 4px solid var(--riot-pink);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 450px;
+    padding: 30px 20px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 0 50px rgba(255, 0, 85, 0.5);
+    animation: slamIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.receipt-subtitle {
+    color: #00e5ff;
+    font-weight: 900;
+    letter-spacing: 3px;
+    margin-bottom: 30px;
+}
+
+.receipt-battle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.receipt-fighter img {
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #fff;
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+
+#receipt-fighter-1 img { border-color: #FFD700; box-shadow: 0 0 25px #FFD700; }
+#receipt-fighter-2 img { border-color: var(--riot-pink); box-shadow: 0 0 25px var(--riot-pink); }
+
+.receipt-fighter h3 { margin: 10px 0 5px; font-size: 1.2rem; }
+.receipt-votes { font-family: 'Anton', sans-serif; font-size: 1.5rem; margin: 0; color: #00e5ff; }
+
+.receipt-vs {
+    font-family: 'Anton', sans-serif;
+    font-size: 3rem;
+    color: var(--riot-pink);
+    text-shadow: 0 0 10px #ff0055;
+    animation: intenseShake 0.2s infinite;
+}
+
+.receipt-gap {
+    background: #fff; color: #000;
+    font-family: 'Anton', sans-serif;
+    font-size: 1.5rem;
+    padding: 10px; border-radius: 10px;
+    margin: 20px 0;
+    text-transform: uppercase;
+}
+
+/* --- THE RIVALRY RECEIPT MODAL BUTTON FIX --- */
+.screenshot-hint {
+    background: var(--riot-pink); 
+    color: white;
+    font-weight: bold; 
+    font-size: 1.1rem;
+    padding: 15px; 
+    border-radius: 10px;
+    margin-top: 10px;
+    animation: pulse 1s infinite alternate;
+    
+    /* THE FIX: Forces padding to stay inside the 100% width boundary */
+    box-sizing: border-box; 
+    width: 100%;
+    display: block;
+    text-align: center;
+}
+
+button.screenshot-hint {
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 15px var(--riot-pink);
+    transition: transform 0.2s ease;
+    margin-left: 50%;
+    margin-top: 10%;
+}
+
+button.screenshot-hint:active {
+    transform: scale(0.95);
+}
+.close-receipt {
+    position: absolute; top: 10px; right: 15px;
+    background: none; border: none; color: white; font-size: 1.5rem;
+    font-weight: bold; cursor: pointer; opacity: 0.5;
+}
+/* --- GLOBAL LIVE TICKER --- */
+.global-ticker-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(10, 10, 15, 0.95);
+    border-top: 2px solid var(--riot-pink);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    box-shadow: 0 -5px 20px rgba(255, 0, 85, 0.3);
+    z-index: 100;
+}
+
+/* The solid label that stays still on the left */
+.global-ticker-label {
+    background: var(--riot-pink);
+    color: white;
+    font-family: 'Anton', sans-serif;
+    padding: 12px 20px;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    z-index: 2;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+    animation: pulseLabel 1.5s infinite alternate;
+}
+
+@keyframes pulseLabel {
+    0% { background: #ff0055; text-shadow: 0 0 5px white; }
+    100% { background: #cc0044; text-shadow: none; }
+}
+
+/* The track that physically moves */
+.global-ticker-track {
+    display: flex;
+    white-space: nowrap;
+    /* 15s is the speed. Adjust lower for faster reading! */
+    animation: scrollTicker 15s linear infinite; 
+}
+
+/* The text inside the track */
+.ticker-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.2rem;
+    color: #00e5ff; /* Cyan pops nicely against the dark bg */
+    padding-left: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Because we duplicated the text in the HTML, 
+  we only need to slide it left by 50% to create a perfect loop! 
+*/
+@keyframes scrollTicker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); } 
+}

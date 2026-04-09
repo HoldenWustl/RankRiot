@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RankRiot - SPAM IT</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+    
+    <div id="ambient-particles"></div>
+
+    <div id="splash-screen" class="screen">
+        <div class="logo-wrapper">
+            <h1 class="title">RANK<span class="riot-glow">RIOT</span></h1>
+            <div class="glow-orb"></div>
+        </div>
+        <p class="subtitle">SETTLE THE DEBATE. DEFEND YOUR GOATS.</p>
+        <div class="action-buttons">
+    <button id="play-btn" class="glow-btn">ENTER THE RIOT</button>
+    
+    <button class="viral-share-btn main-share" onclick="triggerNativeShare('Main')">
+        <span class="share-icon">🔗</span> CHALLENGE FRIENDS
+    </button>
+</div>
+    </div>
+
+   <div id="category-screen" class="screen hidden">
+        <h2 class="header-text glitch-text">SELECT LIST TO MASSACRE</h2>
+        <div class="category-list">
+            
+            <div class="cat-card" data-list="presidents" style="--card-color: #ff0055;">
+                <div class="card-glare"></div>
+                <span class="cat-icon">🇺🇸</span>
+                <span class="cat-name">US Presidents</span>
+                <span class="cat-arrow">🔥</span>
+            </div>
+            
+            <div class="cat-card" data-list="spiderman" style="--card-color: #ff0000;">
+                <div class="card-glare"></div>
+                <span class="cat-icon">🕷️</span>
+                <span class="cat-name">Spider-Man</span>
+                <span class="cat-arrow">🔥</span>
+            </div>
+            
+            <div class="cat-card" data-list="fastfood" style="--card-color: #ffaa00;">
+                <div class="card-glare"></div>
+                <span class="cat-icon">🍟</span>
+                <span class="cat-name">Fast Food</span>
+                <span class="cat-arrow">🔥</span>
+            </div>
+
+            <div class="cat-card" data-list="rappers" style="--card-color: #b000ff;">
+                <div class="card-glare"></div>
+                <span class="cat-icon">🎤</span>
+                <span class="cat-name">GOAT Rappers</span>
+                <span class="cat-arrow">🔥</span>
+            </div>
+
+            <div class="cat-card" data-list="shows" style="--card-color: #00e5ff;">
+                <div class="card-glare"></div>
+                <span class="cat-icon">📺</span>
+                <span class="cat-name">Elite TV Shows</span>
+                <span class="cat-arrow">🔥</span>
+            </div>
+
+        </div>
+
+        <div class="global-ticker-container">
+            <div class="global-ticker-label">🚨 LIVE</div>
+            <div class="global-ticker-track">
+                <span class="ticker-text" id="ticker-content">WASHINGTON OVERTAKES LINCOLN BY 5 VOTES! • SPIDER-MAN 2 CROSSES 10K VOTES! • SOMEONE JUST NUKED MCDONALDS! • </span>
+                <span class="ticker-text" id="ticker-content-clone">WASHINGTON OVERTAKES LINCOLN BY 5 VOTES! • SPIDER-MAN 2 CROSSES 10K VOTES! • SOMEONE JUST NUKED MCDONALDS! • </span>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen hidden">
+      <div id="global-ticker-container" class="hidden">
+    <div id="global-ticker-text">🚨 TRUMP JUST CRUSHED BIDEN! 🚨</div>
+</div>
+        <div id="sticky-header">
+         
+            <button id="back-btn">BACK</button>
+            <h2 id="current-list-title">PRESIDENTS</h2>
+            <div id="combo-container">
+                <div id="combo-bar-bg">
+                    <div id="combo-bar-fill"></div>
+                </div>
+                <div id="combo-text">1x SPAM</div>
+            </div>
+        </div>
+
+        <div id="ranking-list">
+            </div>
+            <button class="viral-share-btn game-share" onclick="triggerRivalryReceipt()">
+        <span class="share-icon">📸</span> SNAP THE BEEF
+    </button>
+    </div>
+    <div id="receipt-modal" class="hidden">
+    <div class="receipt-card">
+        <h2 class="glitch-text" style="font-size: 3rem; margin-bottom: 0;">TALE OF THE TAPE</h2>
+        <p class="receipt-subtitle">RANK RIOT: LIVE UPDATE</p>
+        
+        <div class="receipt-battle">
+            <div class="receipt-fighter" id="receipt-fighter-1">
+                <img src="" id="receipt-img-1" alt="Fighter 1">
+                <h3 id="receipt-name-1">NAME 1</h3>
+                <p id="receipt-votes-1" class="receipt-votes">0 VOTES</p>
+            </div>
+            
+            <div class="receipt-vs">VS</div>
+            
+            <div class="receipt-fighter" id="receipt-fighter-2">
+                <img src="" id="receipt-img-2" alt="Fighter 2">
+                <h3 id="receipt-name-2">NAME 2</h3>
+                <p id="receipt-votes-2" class="receipt-votes">0 VOTES</p>
+            </div>
+        </div>
+
+        <div class="receipt-gap">
+            Gap: <span id="receipt-vote-diff">0</span> Votes!
+        </div>
+
+        <button class="close-receipt" onclick="closeReceipt()">X</button>
+       <button id="share-receipt-btn" class="screenshot-hint" onclick="shareReceiptImage()">
+    📸 SHARE THIS BEEF 📸
+</button>
+    </div>
+</div>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
