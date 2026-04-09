@@ -683,125 +683,106 @@ window.seedDatabase = async function() {
 };
 
 function triggerOvertakeEffect(winnerName, loserName) {
-    if (document.querySelector('.overtake-banner')) return; 
+    if (document.querySelector('.overtake-wrapper')) return;
 
-    const banner = document.createElement('div');
-    banner.classList.add('overtake-banner');
-    banner.innerHTML = `
-        <h1 style="pointer-events: none;">💥 OVERTAKEN! 💥</h1>
-        <p style="pointer-events: none;">${winnerName} crushed ${loserName}!</p>
+    // 1. Create the Wrapper
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('overtake-wrapper');
+    
+    wrapper.innerHTML = `
+        <div class="overtake-ribbon">New Leader: ${winnerName}</div>
+        <div class="overtake-popup">
+            <h1>💥 OVERTAKEN! 💥</h1>
+            <p>${winnerName} crushed ${loserName}!</p>
+        </div>
     `;
+    document.body.appendChild(wrapper);
 
-    // Visual/Physical Prep - Don't use cssText, it resets everything
-    Object.assign(banner.style, {
-        pointerEvents: 'auto',
-        zIndex: '9999',
-        touchAction: 'none',
-        userSelect: 'none',
-        webkitUserSelect: 'none',
-        willChange: 'transform, opacity'
-    });
+    const popup = wrapper.querySelector('.overtake-popup');
+    const ribbon = wrapper.querySelector('.overtake-ribbon');
 
-    document.body.appendChild(banner);
+    // Haptics
+    if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
 
-    // Track animation state
-    let animationFinished = false;
-    banner.addEventListener('animationend', () => {
-        animationFinished = true;
-    });
-
-    // DOPAMINE HIT: Haptic + Screen Shake
-    if (navigator.vibrate) navigator.vibrate([100, 30, 100]); 
-    document.body.style.animation = "shake 0.2s ease-in-out";
-    setTimeout(() => document.body.style.animation = "", 200);
-
-    let autoRemoveTimer = setTimeout(() => {
-        if (banner.parentNode) banner.remove();
-    }, 2000);
-
-    let startX = 0, startY = 0;
-    let isDragging = false;
-    let hasSwipedEnough = false; 
-    const threshold = 25; // High threshold to ignore "fat finger" jitters
-
-    banner.addEventListener('pointerdown', (e) => {
-        startX = e.clientX;
-        startY = e.clientY;
-        isDragging = true;
-        hasSwipedEnough = false; 
-        e.target.setPointerCapture(e.pointerId);
-    });
-
-    banner.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
-
-        const deltaX = e.clientX - startX;
-        const deltaY = e.clientY - startY;
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-        // Transition from "Animating" to "Dragging"
-        if (!hasSwipedEnough && distance > threshold) {
-            hasSwipedEnough = true;
-            clearTimeout(autoRemoveTimer);
-
-            // Capture current visual state ONLY if animation is still running
-            if (!animationFinished) {
-                const style = window.getComputedStyle(banner);
-                banner.style.transform = style.transform;
-                banner.style.animation = 'none';
-            } else {
-                // If it was already finished, just kill the animation property
-                // so it doesn't fight our manual transform updates
-                banner.style.animation = 'none';
-                banner.style.transform = 'translate(-50%, -50%) scale(1)';
-            }
-        }
-
-        // Apply movement only if we've actually "started" a swipe
-        if (hasSwipedEnough) {
-            const rotation = deltaX * 0.08;
-            banner.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) rotate(${rotation}deg) scale(1)`;
-            banner.style.opacity = 1 - (Math.abs(deltaX) / (window.innerWidth / 1.2));
-        }
-    });
-
-    const handleRelease = (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-
-        if (e.target.hasPointerCapture && e.target.hasPointerCapture(e.pointerId)) {
-            e.target.releasePointerCapture(e.pointerId);
-        }
-
-        // If it was just a tap, don't do anything (let the autoRemoveTimer handle it)
-        if (!hasSwipedEnough) return;
-
-        const deltaX = e.clientX - startX;
-        const deltaY = e.clientY - startY;
-
-        banner.style.transition = 'transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s';
-
-        if (Math.abs(deltaX) > 100 || Math.abs(deltaY) > 100) {
-            // "Yeet" it out
-            const angle = Math.atan2(deltaY, deltaX);
-            const velocity = 1500; 
-            const finalX = Math.cos(angle) * velocity;
-            const finalY = Math.sin(angle) * velocity;
-
-            banner.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px)) rotate(${deltaX * 0.5}deg)`;
-            banner.style.opacity = '0';
-            setTimeout(() => { if (banner.parentNode) banner.remove(); }, 400);
-        } else {
-            // Snap back
-            banner.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)';
-            banner.style.opacity = '1';
-            // Re-arm the auto-remove since the user gave up on the swipe
-            autoRemoveTimer = setTimeout(() => { if (banner.parentNode) banner.remove(); }, 1500);
-        }
+    // Timer Management
+    let autoRemoveTimer;
+    const startAutoRemove = () => {
+        autoRemoveTimer = setTimeout(closeAll, 2500);
     };
 
-    banner.addEventListener('pointerup', handleRelease);
-    banner.addEventListener('pointercancel', handleRelease);
+    const closeAll = () => {
+        ribbon.style.transition = "transform 0.4s ease-in";
+        ribbon.style.transform = "translateY(-100%)";
+        popup.style.transition = "transform 0.3s ease-in, opacity 0.3s";
+        popup.style.transform = "translate(-50%, -50%) scale(0)";
+        popup.style.opacity = "0";
+        setTimeout(() => wrapper.remove(), 400);
+    };
+
+    startAutoRemove();
+
+    // Swipe Logic
+    let startX, startY, isDragging = false, hasSwiped = false;
+    const threshold = 15;
+
+    popup.addEventListener('pointerdown', (e) => {
+        clearTimeout(autoRemoveTimer); // Stop the clock the moment they touch it
+        isDragging = true;
+        hasSwiped = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        popup.setPointerCapture(e.pointerId);
+    });
+
+    popup.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+
+        if (!hasSwiped && dist > threshold) {
+            hasSwiped = true;
+            // Freeze the animation state
+            const style = window.getComputedStyle(popup);
+            popup.style.animation = 'none';
+            popup.style.transform = style.transform;
+            popup.style.transition = 'none';
+        }
+
+        if (hasSwiped) {
+            const rotation = dx * 0.1;
+            const opacity = 1 - (Math.abs(dx) / (window.innerWidth / 1.1));
+            popup.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${rotation}deg) scale(1)`;
+            popup.style.opacity = opacity;
+        }
+    });
+
+    popup.addEventListener('pointerup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        popup.releasePointerCapture(e.pointerId);
+
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        if (hasSwiped && (Math.abs(dx) > 100 || Math.abs(dy) > 100)) {
+            // YEET IT
+            const angle = Math.atan2(dy, dx);
+            const x = Math.cos(angle) * 1000;
+            const y = Math.sin(angle) * 1000;
+            popup.style.transition = "transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s";
+            popup.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${dx * 0.2}deg)`;
+            popup.style.opacity = "0";
+            setTimeout(closeAll, 100); // Start closing the ribbon too
+        } else {
+            // SNAP BACK
+            popup.style.transition = "transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s";
+            popup.style.transform = "translate(-50%, -50%) rotate(0deg) scale(1)";
+            popup.style.opacity = "1";
+            startAutoRemove(); // Restart the clock
+        }
+    });
 }
 // --- JUICE: Milestone Nuke ---
 function triggerMilestoneNuke(name, totalVotes) {
