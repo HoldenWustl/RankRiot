@@ -684,7 +684,6 @@ window.seedDatabase = async function() {
 
 // --- JUICE: Overtake Explosion ---
 function triggerOvertakeEffect(winnerName, loserName) {
-    // Prevent spamming the banner if they are trading 1st place rapidly
     if (document.querySelector('.overtake-banner')) return; 
 
     const banner = document.createElement('div');
@@ -697,68 +696,70 @@ function triggerOvertakeEffect(winnerName, loserName) {
 
     if (navigator.vibrate) navigator.vibrate([50, 50, 100]); // Heavy hit
 
-    // 1. Store the timeout ID so we can cancel it if they interact early
     let autoRemoveTimer = setTimeout(() => {
         if (banner.parentNode) banner.remove();
     }, 1500);
 
-    // --- NEW: SWIPE TO DISMISS LOGIC ---
+    // State variables
     let startX = 0;
     let currentTranslate = 0;
+    let isDragging = false;
 
-    banner.addEventListener('touchstart', (e) => {
-        // Grab the initial touch point on the screen
-        startX = e.touches[0].clientX;
+    // 1. POINTER DOWN (Replaces touchstart)
+    banner.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        startX = e.clientX; 
+        currentTranslate = 0; // Prevent stale data from a previous abandoned swipe
         
-        // Disable CSS transitions temporarily so the banner sticks exactly to the finger
         banner.style.transition = 'none'; 
-        
-        // Pause the auto-remove timer while they are holding it
         clearTimeout(autoRemoveTimer);
-    }, { passive: true });
-
-    banner.addEventListener('touchmove', (e) => {
-        const currentX = e.touches[0].clientX;
-        currentTranslate = currentX - startX;
         
-        // Move the banner with the finger and make it slightly transparent as it moves
+        // This forces the browser to keep sending mouse/touch events to the banner 
+        // even if the user's finger slides off the banner super fast.
+        banner.setPointerCapture(e.pointerId); 
+    });
+
+    // 2. POINTER MOVE (Replaces touchmove)
+    banner.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        
+        currentTranslate = e.clientX - startX;
         banner.style.transform = `translateX(${currentTranslate}px)`;
         banner.style.opacity = 1 - (Math.abs(currentTranslate) / window.innerWidth);
-        
-        // Prevent default scrolling behavior while swiping the banner
-        e.preventDefault(); 
-    }, { passive: false });
+    });
 
-    banner.addEventListener('touchend', () => {
-        // Turn CSS transitions back on for a smooth snap or fly-away animation
+    // 3. POINTER UP & CANCEL (Replaces touchend)
+    const handleRelease = () => {
+        if (!isDragging) return;
+        isDragging = false;
+
         banner.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
 
-        // 2. The Threshold: If they swiped more than 75 pixels, let it fly!
         if (Math.abs(currentTranslate) > 75) {
-            // Determine which direction they swiped and yeet it off screen
+            // Yeet it
             const flyAwayDistance = currentTranslate > 0 ? window.innerWidth : -window.innerWidth;
             banner.style.transform = `translateX(${flyAwayDistance}px)`;
             banner.style.opacity = '0';
             
-            // Remove from the DOM after the fly-away animation finishes
             setTimeout(() => {
                 if (banner.parentNode) banner.remove();
             }, 300);
             
-            // Add a tiny haptic bump so they feel the successful dismissal
             if (navigator.vibrate) navigator.vibrate(20); 
             
         } else {
-            // 3. They didn't swipe far enough; snap it back to the center
+            // Snap it back
             banner.style.transform = 'translateX(0px)';
             banner.style.opacity = '1';
             
-            // Restart the 1.5s auto-remove timer since they abandoned the swipe
             autoRemoveTimer = setTimeout(() => {
                 if (banner.parentNode) banner.remove();
             }, 1500);
         }
-    });
+    };
+
+    banner.addEventListener('pointerup', handleRelease);
+    banner.addEventListener('pointercancel', handleRelease); // Catches system interruptions!
 }
 // --- JUICE: Milestone Nuke ---
 function triggerMilestoneNuke(name, totalVotes) {
