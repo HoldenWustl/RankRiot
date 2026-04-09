@@ -693,7 +693,7 @@ function triggerOvertakeEffect(winnerName, loserName) {
     if (document.querySelector('.overtake-wrapper')) return;
 
     const wrapper = document.createElement('div');
-    wrapper.classList.add('overtake-wrapper');
+    wrapper.className = 'overtake-wrapper';
 
     wrapper.innerHTML = `
         <div class="overtake-ribbon">New Leader: ${winnerName}</div>
@@ -718,28 +718,39 @@ function triggerOvertakeEffect(winnerName, loserName) {
     const closeAll = () => {
         clearTimeout(autoRemoveTimer);
 
-        ribbon.style.transition = "transform 0.4s ease-in";
-        ribbon.style.transform = "translateY(-100%)";
+        ribbon.style.transition = 'transform 0.35s ease-in';
+        ribbon.style.transform = 'translateY(-100%)';
 
-        popup.style.transition = "transform 0.3s ease-in, opacity 0.3s";
-        popup.style.transform = "translate(-50%, -50%) scale(0)";
-        popup.style.opacity = "0";
+        popup.style.transition = 'transform 0.35s ease-in, opacity 0.25s ease-in';
+        popup.style.transform = 'translate(-50%, -50%) scale(0.85)';
+        popup.style.opacity = '0';
 
-        setTimeout(() => wrapper.remove(), 400);
+        setTimeout(() => wrapper.remove(), 380);
     };
 
     startAutoRemove();
 
-    let startX, startY, isDragging = false, hasSwiped = false;
-    const threshold = 10;
+    let startX = 0;
+    let startY = 0;
+    let isDragging = false;
+    let hasSwiped = false;
+
+    const baseTransform = 'translate(-50%, -50%)';
 
     popup.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
         clearTimeout(autoRemoveTimer);
+
         isDragging = true;
         hasSwiped = false;
         startX = e.clientX;
         startY = e.clientY;
+
         popup.setPointerCapture(e.pointerId);
+
+        popup.style.animation = 'none';
+        popup.style.transition = 'none';
+        popup.style.opacity = '1';
     });
 
     popup.addEventListener('pointermove', (e) => {
@@ -747,21 +758,16 @@ function triggerOvertakeEffect(winnerName, loserName) {
 
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const dist = Math.hypot(dx, dy);
 
-        if (!hasSwiped && dist > threshold) {
+        if (!hasSwiped && dist > 8) {
             hasSwiped = true;
-            const style = window.getComputedStyle(popup);
-            popup.style.animation = 'none';
-            popup.style.transform = style.transform;
-            popup.style.transition = 'none';
         }
 
         if (hasSwiped) {
-            const rotation = dx * 0.08;
-            const opacity = Math.max(0, 1 - (Math.abs(dx) / (window.innerWidth * 0.45)));
-            popup.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${rotation}deg) scale(1)`;
-            popup.style.opacity = opacity;
+            const rotation = dx * 0.06;
+            popup.style.transform = `${baseTransform} translate3d(${dx}px, ${dy}px, 0) rotate(${rotation}deg)`;
+            popup.style.opacity = '1'; // keep solid while dragging
         }
     });
 
@@ -775,29 +781,31 @@ function triggerOvertakeEffect(winnerName, loserName) {
         const absX = Math.abs(dx);
         const absY = Math.abs(dy);
 
-        const shouldYeet = hasSwiped && (absX > 70 || absY > 70);
+        const shouldYeet = hasSwiped && (absX > 60 || absY > 60);
 
         if (shouldYeet) {
             const angle = Math.atan2(dy, dx);
-            const x = Math.cos(angle) * 1000;
-            const y = Math.sin(angle) * 1000;
+            const flyX = Math.cos(angle) * 1200;
+            const flyY = Math.sin(angle) * 1200;
 
-            popup.style.transition = "transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s";
-            popup.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${dx * 0.2}deg)`;
-            popup.style.opacity = "0";
+            popup.style.transition = 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s linear';
+            popup.style.transform = `${baseTransform} translate3d(${flyX}px, ${flyY}px, 0) rotate(${dx * 0.15}deg)`;
+            popup.style.opacity = '0';
 
-            // Let the popup finish exiting before closing the ribbon
-            setTimeout(closeAll, 450);
+            setTimeout(closeAll, 560);
         } else {
-            popup.style.transition = "transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s";
-            popup.style.transform = "translate(-50%, -50%) rotate(0deg) scale(1)";
-            popup.style.opacity = "1";
+            popup.style.transition = 'transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s';
+            popup.style.transform = baseTransform;
+            popup.style.opacity = '1';
             startAutoRemove();
         }
     });
 
     popup.addEventListener('pointercancel', () => {
         isDragging = false;
+        popup.style.transition = 'transform 0.35s ease, opacity 0.2s';
+        popup.style.transform = baseTransform;
+        popup.style.opacity = '1';
         startAutoRemove();
     });
 }
