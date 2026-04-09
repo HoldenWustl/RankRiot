@@ -687,96 +687,84 @@ function triggerOvertakeEffect(winnerName, loserName) {
 
     const banner = document.createElement('div');
     banner.classList.add('overtake-banner');
-    
-    // CRITICAL FIX 1: Add pointer-events: none to children 
-    // so the pointer always targets the banner div itself.
     banner.innerHTML = `
         <h1 style="pointer-events: none;">💥 OVERTAKEN! 💥</h1>
         <p style="pointer-events: none;">${winnerName} crushed ${loserName}!</p>
     `;
 
-    // CRITICAL FIX 2: Force layering and interaction via JS
-    banner.style.pointerEvents = 'auto'; // Overrides any CSS blocking interaction
-    banner.style.zIndex = '9999'; // Forces it above all other game layers
-    banner.style.touchAction = 'none'; 
-    banner.style.userSelect = 'none';
-    banner.style.webkitUserSelect = 'none';
-    banner.style.willChange = 'transform, opacity'; 
+    // Visual/Physical Prep
+    banner.style.cssText = `
+        pointer-events: auto;
+        z-index: 9999;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        will-change: transform, opacity;
+    `;
 
     document.body.appendChild(banner);
 
-    if (navigator.vibrate) navigator.vibrate([50, 50, 100]); 
+    // DOPAMINE HIT: Haptic + Screen Shake
+    if (navigator.vibrate) navigator.vibrate([100, 30, 100, 30, 200]); 
+    document.body.style.animation = "shake 0.2s ease-in-out";
+    setTimeout(() => document.body.style.animation = "", 200);
 
     let autoRemoveTimer = setTimeout(() => {
         if (banner.parentNode) banner.remove();
-    }, 1500);
+    }, 2000);
 
-    let startX = 0;
-    let currentTranslate = 0;
+    let startX = 0, startY = 0;
+    let currX = 0, currY = 0;
     let isDragging = false;
 
     banner.addEventListener('pointerdown', (e) => {
         isDragging = true;
-        startX = e.clientX; 
-        currentTranslate = 0; 
-        
+        startX = e.clientX;
+        startY = e.clientY;
         banner.style.transition = 'none'; 
-        banner.style.animation = 'none';
+        banner.style.animation = 'none'; 
         clearTimeout(autoRemoveTimer);
-        
-        // CRITICAL FIX 3: Safely capture the pointer on the explicit target
         e.target.setPointerCapture(e.pointerId); 
     });
 
-    // In your pointermove listener:
-banner.addEventListener('pointermove', (e) => {
-    if (!isDragging) return;
-    
-    currentTranslateX = e.clientX - startX;
-    currentTranslateY = e.clientY - startY; // You'll need to define startY in pointerdown
-    
-    // Calculate rotation: 0.1 degree per pixel moved
-    const rotation = currentTranslateX * 0.1; 
-    
-    banner.style.transform = `
-        translate(calc(-50% + ${currentTranslateX}px), calc(-50% + ${currentTranslateY}px)) 
-        rotate(${rotation}deg)
-    `;
-    
-    banner.style.opacity = 1 - (Math.abs(currentTranslateX) / window.innerWidth);
-});
+    banner.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        currX = e.clientX - startX;
+        currY = e.clientY - startY;
+        
+        // Rotation makes it feel like it's being "tossed"
+        const rotation = currX * 0.08; 
+        
+        banner.style.transform = `translate(calc(-50% + ${currX}px), calc(-50% + ${currY}px)) rotate(${rotation}deg)`;
+        banner.style.opacity = 1 - (Math.abs(currX) / (window.innerWidth / 1.5));
+    });
 
     const handleRelease = (e) => {
         if (!isDragging) return;
         isDragging = false;
 
-        // Release the pointer cleanly
         if (e.target.hasPointerCapture && e.target.hasPointerCapture(e.pointerId)) {
             e.target.releasePointerCapture(e.pointerId);
         }
 
-        banner.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+        banner.style.transition = 'transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s';
 
-        if (Math.abs(currentTranslate) > 75) {
-            // Yeet it
-            const flyAwayDistance = currentTranslate > 0 ? window.innerWidth : -window.innerWidth;
-            banner.style.transform = `translate(calc(-50% + ${flyAwayDistance}px), -50%)`;
+        // Threshold for yeeting (based on horizontal or vertical distance)
+        if (Math.abs(currX) > 100 || Math.abs(currY) > 100) {
+            const angle = Math.atan2(currY, currX);
+            const velocity = 1500; 
+            const finalX = Math.cos(angle) * velocity;
+            const finalY = Math.sin(angle) * velocity;
+
+            banner.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px)) rotate(${currX * 0.5}deg)`;
             banner.style.opacity = '0';
             
-            setTimeout(() => {
-                if (banner.parentNode) banner.remove();
-            }, 300);
-            
-            if (navigator.vibrate) navigator.vibrate(20); 
-            
+            setTimeout(() => { if (banner.parentNode) banner.remove(); }, 400);
         } else {
-            // Snap it back to dead center
-            banner.style.transform = 'translate(-50%, -50%)';
+            // Snap back
+            banner.style.transform = 'translate(-50%, -50%) rotate(0deg)';
             banner.style.opacity = '1';
-            
-            autoRemoveTimer = setTimeout(() => {
-                if (banner.parentNode) banner.remove();
-            }, 1500);
+            autoRemoveTimer = setTimeout(() => { if (banner.parentNode) banner.remove(); }, 2000);
         }
     };
 
