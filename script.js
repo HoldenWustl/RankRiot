@@ -692,12 +692,9 @@ window.seedDatabase = async function() {
 function triggerOvertakeEffect(winnerName, loserName) {
     if (document.querySelector('.overtake-wrapper')) return;
 
-    // 1. Lock the scroll so they can't swipe the page away
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
     const wrapper = document.createElement('div');
     wrapper.classList.add('overtake-wrapper');
+
     wrapper.innerHTML = `
         <div class="overtake-ribbon">New Leader: ${winnerName}</div>
         <div class="overtake-popup">
@@ -710,83 +707,98 @@ function triggerOvertakeEffect(winnerName, loserName) {
     const popup = wrapper.querySelector('.overtake-popup');
     const ribbon = wrapper.querySelector('.overtake-ribbon');
 
+    if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+
     let autoRemoveTimer;
-    const startAutoRemove = () => { autoRemoveTimer = setTimeout(closeAll, 4000); };
-    
+    const startAutoRemove = () => {
+        clearTimeout(autoRemoveTimer);
+        autoRemoveTimer = setTimeout(closeAll, 2500);
+    };
+
     const closeAll = () => {
-        // Restore scroll
-        document.body.style.overflow = originalOverflow;
-        
+        clearTimeout(autoRemoveTimer);
+
+        ribbon.style.transition = "transform 0.4s ease-in";
         ribbon.style.transform = "translateY(-100%)";
-        popup.style.transition = "all 0.3s ease-in";
+
+        popup.style.transition = "transform 0.3s ease-in, opacity 0.3s";
         popup.style.transform = "translate(-50%, -50%) scale(0)";
         popup.style.opacity = "0";
+
         setTimeout(() => wrapper.remove(), 400);
     };
 
     startAutoRemove();
 
-    let startX, startY, startTime, isDragging = false;
+    let startX, startY, isDragging = false, hasSwiped = false;
+    const threshold = 10;
 
     popup.addEventListener('pointerdown', (e) => {
-        // Prevent default to stop browser from thinking we're selecting text or scrolling
-        e.preventDefault(); 
         clearTimeout(autoRemoveTimer);
         isDragging = true;
+        hasSwiped = false;
         startX = e.clientX;
         startY = e.clientY;
-        startTime = Date.now();
         popup.setPointerCapture(e.pointerId);
-        popup.style.transition = "none"; 
-        popup.style.cursor = 'grabbing';
     });
 
     popup.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
-        
+
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        
-        // Visuals: Make it follow the finger more aggressively
-        const rotation = dx * 0.15;
-        // We use translate3d for hardware acceleration (smoother on mobile)
-        popup.style.transform = `translate3d(calc(-50% + ${dx}px), calc(-50% + ${dy}px), 0) rotate(${rotation}deg)`;
-        popup.style.opacity = 1 - (Math.abs(dx) / 700);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (!hasSwiped && dist > threshold) {
+            hasSwiped = true;
+            const style = window.getComputedStyle(popup);
+            popup.style.animation = 'none';
+            popup.style.transform = style.transform;
+            popup.style.transition = 'none';
+        }
+
+        if (hasSwiped) {
+            const rotation = dx * 0.08;
+            const opacity = Math.max(0, 1 - (Math.abs(dx) / (window.innerWidth * 0.45)));
+            popup.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${rotation}deg) scale(1)`;
+            popup.style.opacity = opacity;
+        }
     });
 
     popup.addEventListener('pointerup', (e) => {
         if (!isDragging) return;
         isDragging = false;
         popup.releasePointerCapture(e.pointerId);
-        popup.style.cursor = 'grab';
 
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        const elapsed = Date.now() - startTime;
-        // Velocity: pixels per ms
-        const velocity = Math.sqrt(dx*dx + dy*dy) / elapsed; 
+        const absX = Math.abs(dx);
+        const absY = Math.abs(dy);
 
-        // Lower thresholds for mobile: 50px or decent speed
-        if (Math.abs(dx) > 50 || Math.abs(dy) > 50 || velocity > 0.4) {
+        const shouldYeet = hasSwiped && (absX > 70 || absY > 70);
+
+        if (shouldYeet) {
             const angle = Math.atan2(dy, dx);
-            // Increase move distance to 1500 to ensure it's gone
-            const moveX = Math.cos(angle) * 1500; 
-            const moveY = Math.sin(angle) * 1500;
+            const x = Math.cos(angle) * 1000;
+            const y = Math.sin(angle) * 1000;
 
-            popup.style.transition = "transform 0.5s cubic-bezier(0.1, 0.5, 0.1, 1), opacity 0.3s";
-            popup.style.transform = `translate3d(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px), 0) rotate(${dx * 0.5}deg)`;
+            popup.style.transition = "transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s";
+            popup.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${dx * 0.2}deg)`;
             popup.style.opacity = "0";
-            
-            // Allow clicking through to game immediately after yeet
-            wrapper.style.pointerEvents = 'none'; 
-            setTimeout(closeAll, 100); 
+
+            // Let the popup finish exiting before closing the ribbon
+            setTimeout(closeAll, 450);
         } else {
-            // SNAP BACK
-            popup.style.transition = "transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s";
-            popup.style.transform = "translate3d(-50%, -50%, 0) rotate(0deg)";
+            popup.style.transition = "transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s";
+            popup.style.transform = "translate(-50%, -50%) rotate(0deg) scale(1)";
             popup.style.opacity = "1";
             startAutoRemove();
         }
+    });
+
+    popup.addEventListener('pointercancel', () => {
+        isDragging = false;
+        startAutoRemove();
     });
 }
 // --- JUICE: Milestone Nuke ---

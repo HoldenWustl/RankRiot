@@ -451,24 +451,16 @@ h1.title {
 
 .overtake-popup h1 { font-family: 'Anton', sans-serif; font-size: 3.5rem; margin: 0; text-shadow: 3px 3px 0 #000; color: white; }
 .overtake-popup p { font-size: 1.2rem; font-weight: bold; margin: 10px 0 0 0; color: white; }
-.overtake-wrapper {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    /* Change this to auto to block the page scroll */
-    pointer-events: auto; 
-    /* Add this to help mobile browsers realize this is a no-scroll zone */
-    touch-action: none; 
-}
-
 .overtake-popup {
-    /* ... your existing styles ... */
-    cursor: grab;
     touch-action: none;
     user-select: none;
-    -webkit-user-drag: none;
-    /* Important for smooth movement */
-    will-change: transform, opacity; 
+    -webkit-user-select: none;
+    overscroll-behavior: contain;
+    cursor: grab;
+}
+
+.overtake-popup:active {
+    cursor: grabbing;
 }
 @keyframes ribbonSlide {
     to { transform: translateY(0); }
