@@ -692,15 +692,25 @@ function triggerOvertakeEffect(winnerName, loserName) {
         <p style="pointer-events: none;">${winnerName} crushed ${loserName}!</p>
     `;
 
-    // Set individual properties so we don't nuk the class animation
-    banner.style.pointerEvents = 'auto';
-    banner.style.userSelect = 'none';
-    banner.style.webkitUserSelect = 'none';
-    banner.style.willChange = 'transform, opacity';
+    // Visual/Physical Prep - Don't use cssText, it resets everything
+    Object.assign(banner.style, {
+        pointerEvents: 'auto',
+        zIndex: '9999',
+        touchAction: 'none',
+        userSelect: 'none',
+        webkitUserSelect: 'none',
+        willChange: 'transform, opacity'
+    });
 
     document.body.appendChild(banner);
 
-    // Haptics & Shake
+    // Track animation state
+    let animationFinished = false;
+    banner.addEventListener('animationend', () => {
+        animationFinished = true;
+    });
+
+    // DOPAMINE HIT: Haptic + Screen Shake
     if (navigator.vibrate) navigator.vibrate([100, 30, 100]); 
     document.body.style.animation = "shake 0.2s ease-in-out";
     setTimeout(() => document.body.style.animation = "", 200);
@@ -712,7 +722,7 @@ function triggerOvertakeEffect(winnerName, loserName) {
     let startX = 0, startY = 0;
     let isDragging = false;
     let hasSwipedEnough = false; 
-    const threshold = 15; // Increased to ignore "finger squish"
+    const threshold = 25; // High threshold to ignore "fat finger" jitters
 
     banner.addEventListener('pointerdown', (e) => {
         startX = e.clientX;
@@ -729,24 +739,28 @@ function triggerOvertakeEffect(winnerName, loserName) {
         const deltaY = e.clientY - startY;
         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-        // 1. Check if we just crossed the threshold for the first time
+        // Transition from "Animating" to "Dragging"
         if (!hasSwipedEnough && distance > threshold) {
             hasSwipedEnough = true;
             clearTimeout(autoRemoveTimer);
 
-            // 2. CAPTURE & FREEZE
-            // We get the visual state right now so there's no jump
-            const style = window.getComputedStyle(banner);
-            const currentMatrix = style.transform;
-            
-            banner.style.animation = 'none'; // Stop the CSS pop
-            banner.style.transform = currentMatrix; // Hold it exactly where it was
+            // Capture current visual state ONLY if animation is still running
+            if (!animationFinished) {
+                const style = window.getComputedStyle(banner);
+                banner.style.transform = style.transform;
+                banner.style.animation = 'none';
+            } else {
+                // If it was already finished, just kill the animation property
+                // so it doesn't fight our manual transform updates
+                banner.style.animation = 'none';
+                banner.style.transform = 'translate(-50%, -50%) scale(1)';
+            }
         }
 
-        // 3. Only move the banner if the swipe is "official"
+        // Apply movement only if we've actually "started" a swipe
         if (hasSwipedEnough) {
             const rotation = deltaX * 0.08;
-            banner.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) rotate(${rotation}deg)`;
+            banner.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) rotate(${rotation}deg) scale(1)`;
             banner.style.opacity = 1 - (Math.abs(deltaX) / (window.innerWidth / 1.2));
         }
     });
@@ -759,24 +773,30 @@ function triggerOvertakeEffect(winnerName, loserName) {
             e.target.releasePointerCapture(e.pointerId);
         }
 
-        if (hasSwipedEnough) {
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
+        // If it was just a tap, don't do anything (let the autoRemoveTimer handle it)
+        if (!hasSwipedEnough) return;
 
-            banner.style.transition = 'transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s';
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
 
-            if (Math.abs(deltaX) > 100 || Math.abs(deltaY) > 100) {
-                const angle = Math.atan2(deltaY, deltaX);
-                const finalX = Math.cos(angle) * 1500;
-                const finalY = Math.sin(angle) * 1500;
-                banner.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px)) rotate(${deltaX * 0.5}deg)`;
-                banner.style.opacity = '0';
-                setTimeout(() => { if (banner.parentNode) banner.remove(); }, 400);
-            } else {
-                banner.style.transform = 'translate(-50%, -50%) rotate(0deg)';
-                banner.style.opacity = '1';
-                autoRemoveTimer = setTimeout(() => { if (banner.parentNode) banner.remove(); }, 2000);
-            }
+        banner.style.transition = 'transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s';
+
+        if (Math.abs(deltaX) > 100 || Math.abs(deltaY) > 100) {
+            // "Yeet" it out
+            const angle = Math.atan2(deltaY, deltaX);
+            const velocity = 1500; 
+            const finalX = Math.cos(angle) * velocity;
+            const finalY = Math.sin(angle) * velocity;
+
+            banner.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px)) rotate(${deltaX * 0.5}deg)`;
+            banner.style.opacity = '0';
+            setTimeout(() => { if (banner.parentNode) banner.remove(); }, 400);
+        } else {
+            // Snap back
+            banner.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)';
+            banner.style.opacity = '1';
+            // Re-arm the auto-remove since the user gave up on the swipe
+            autoRemoveTimer = setTimeout(() => { if (banner.parentNode) banner.remove(); }, 1500);
         }
     };
 
