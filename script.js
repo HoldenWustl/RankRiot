@@ -42,7 +42,29 @@ let recentTickerMessages = [
     "WAITING FOR FIRST BLOOD", 
     "CHOOSE YOUR BATTLEFIELD"
 ];
+// --- PRELOAD CACHE ---
+const imageCache = new Set();
 
+async function preloadCategoryImages() {
+    // Silently fetch images in the background so they are ready instantly
+    const categories = ['presidents', 'spiderman', 'fastfood', 'rappers', 'shows'];
+    
+    categories.forEach(async (cat) => {
+        try {
+            const snap = await getDocs(collection(db, `lists/${cat}/items`));
+            snap.forEach(doc => {
+                const url = doc.data().imageUrl;
+                if (url && !imageCache.has(url)) {
+                    const img = new Image();
+                    img.src = url; // Forces the browser to download and cache it
+                    imageCache.add(url);
+                }
+            });
+        } catch (err) {
+            console.log("Preload skipped for ", cat);
+        }
+    });
+}
 // Listen to the global event document
 onSnapshot(doc(db, "global", "latest_event"), (docSnap) => {
     if (!docSnap.exists()) return;
@@ -130,6 +152,9 @@ document.getElementById('play-btn').addEventListener('click', () => {
     // Add a satisfying click feel even to entry
     if(navigator.vibrate) navigator.vibrate([30, 10, 30]);
     showScreen('category');
+    
+    // START PRELOADING WHILE THEY CHOOSE A CATEGORY
+    preloadCategoryImages(); 
 });
 
 document.getElementById('back-btn').addEventListener('click', () => {
@@ -350,69 +375,80 @@ function handleMash(id, e) {
         triggerMilestoneNuke(itemsData[id].name, newTotal);
     }
 
-    // 3. VISUAL JUICE
+   // 3. VISUAL JUICE
     createFloatingText(event.clientX, event.clientY, `+${multiplier}`);
-    // Trigger audio pop
     playPopSound(multiplier);
 
-    // Trigger visual card flash
+    // OPTIMIZATION: Fix Layout Thrashing on the animation reset
     const cardEl = document.getElementById(`item-${id}`);
-    cardEl.classList.remove('flash-hit'); // reset animation
-    void cardEl.offsetWidth; // trigger reflow
-    cardEl.classList.add('flash-hit');
+    cardEl.classList.remove('flash-hit');
     
-    // Mobile Haptics (Vibration)
+    // Instead of forcing a synchronous reflow (void cardEl.offsetWidth), 
+    // we use double requestAnimationFrame to let the browser breathe.
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            cardEl.classList.add('flash-hit');
+        });
+    });
+    
+    // Mobile Haptics
     if (navigator.vibrate) {
-        if(multiplier === 10) navigator.vibrate(25); // Harder pulse in Fever
-        else navigator.vibrate(10); // Light pulse normally
+        if(multiplier === 10) navigator.vibrate(25);
+        else navigator.vibrate(10); 
     }
+
     let itemsArray = Object.values(itemsData).map(item => ({
         id: item.id,
         name: item.name,
         total: item.votes + (pendingVotes[item.id] || 0)
     })).sort((a, b) => b.total - a.total);
 
-    // 2. Find where our mashed item belongs now, and where it was
     let newRank = itemsArray.findIndex(i => i.id === id);
-    let oldRank = parseInt(document.getElementById(`item-${id}`).style.order) || newRank;
+    let oldRank = parseInt(cardEl.style.order) || newRank;
 
-    // 3. INSTANT REORDER: Physically swap the items on screen instantly
+    // OPTIMIZATION: Only touch the DOM if a rank ACTUALLY changed
+    let ranksShifted = false;
     itemsArray.forEach((item, index) => {
         let el = document.getElementById(`item-${item.id}`);
-        el.style.order = index;
-        el.querySelector('.rank-number').innerText = (index + 1);
+        if (!el) return;
+        
+        let currentOrder = parseInt(el.style.order);
+        if (currentOrder !== index || isNaN(currentOrder)) {
+            el.style.order = index;
+            el.querySelector('.rank-number').innerText = (index + 1);
+            ranksShifted = true;
+        }
     });
 
-    // 4. Reset Clash visuals
-    document.querySelectorAll('.list-item').forEach(el => el.classList.remove('clashing'));
-    rankingList.classList.remove('list-dimmed');
+    // 4. Reset Clash visuals ONLY if something moved
+    if (ranksShifted || document.querySelector('.clashing')) {
+        document.querySelectorAll('.list-item').forEach(el => el.classList.remove('clashing'));
+        rankingList.classList.remove('list-dimmed');
+    }
 
-    // 5. DID WE OVERTAKE? (Inside handleMash)
+    // 5. DID WE OVERTAKE?
     if (newRank < oldRank) {
         let winnerName = itemsData[id].name;
         let loserName = itemsArray[newRank + 1].name;
         
-        // Local explosion
         triggerOvertakeEffect(winnerName, loserName);
         
-        // --- NEW: BROADCAST TO THE WORLD ---
         setDoc(doc(db, "global", "latest_event"), {
             winner: winnerName,
             loser: loserName,
             timestamp: Date.now()
         });
     }
-    // 6. ARE WE IN A 1v1 CLASH? (Within 25 votes of the guy above us)
+    // 6. ARE WE IN A 1v1 CLASH? 
     else if (newRank > 0) {
         let gap = itemsArray[newRank - 1].total - itemsArray[newRank].total;
         if (gap > 0 && gap <= 25) {
-            // Engage 1v1 Mode!
             rankingList.classList.add('list-dimmed');
             document.getElementById(`item-${id}`).classList.add('clashing');
             document.getElementById(`item-${itemsArray[newRank - 1].id}`).classList.add('clashing');
         }
-      }
     }
+}
 
 
 // --- Firebase Batch Writer (Critical for Free Tier) ---
