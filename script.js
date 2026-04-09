@@ -417,17 +417,23 @@ function handleMash(id, e) {
     createFloatingText(event.clientX, event.clientY, `+${multiplier}`);
     playPopSound(multiplier);
 
-    // OPTIMIZATION: Fix Layout Thrashing on the animation reset
+    // --- JUICE: RANK-BASED HIT FLASHES ---
     const cardEl = document.getElementById(`item-${id}`);
-    cardEl.classList.remove('flash-hit');
+    let currentRank = parseInt(cardEl.style.order) || 0;
+    let flashClass = 'flash-standard';
     
-    // Instead of forcing a synchronous reflow (void cardEl.offsetWidth), 
-    // we use double requestAnimationFrame to let the browser breathe.
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            cardEl.classList.add('flash-hit');
-        });
-    });
+    if (currentRank === 0) flashClass = 'flash-gold';
+    else if (currentRank === 1) flashClass = 'flash-silver';
+    else if (currentRank === 2) flashClass = 'flash-bronze';
+
+    // 1. Remove all possible flashes
+    cardEl.classList.remove('flash-standard', 'flash-gold', 'flash-silver', 'flash-bronze', 'flash-hit');
+    
+    // 2. FORCED REFLOW: This strictly commands the browser to restart the CSS animation!
+    void cardEl.offsetWidth; 
+    
+    // 3. Re-apply the flash
+    cardEl.classList.add(flashClass);
     
     // Mobile Haptics
     if (navigator.vibrate) {

@@ -469,9 +469,68 @@ h1.title {
     70% { transform: translate(-50%, -50%) scale(1.1); filter: brightness(1.2); }
     100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
 }
-/* --- JUICY CARD FLASH --- */
-.list-item.flash-hit {
-    animation: hitFlash 0.1s ease-out;
+/* --- JUICE: METALLIC CLICK FLASHES --- */
+/* Attach .list-item and add !important to override the idle crown-glow animations */
+.list-item.flash-standard { animation: flashStandard 0.3s ease-out !important; }
+.list-item.flash-gold { animation: flashGold 0.4s ease-out !important; }
+.list-item.flash-silver { animation: flashSilver 0.35s ease-out !important; }
+.list-item.flash-bronze { animation: flashBronze 0.3s ease-out !important; }
+
+/* --- FIX: Stop normal transitions from fighting the flash --- */
+.list-item.flash-standard, 
+.list-item.flash-gold, 
+.list-item.flash-silver, 
+.list-item.flash-bronze {
+    transition: none !important; 
+    z-index: 50 !important; /* Bring the flashed item to the front */
+}
+
+/* Standard Flash (Ranks 4+) - Subtle white hit */
+@keyframes flashStandard {
+    0% { background-color: rgba(255, 255, 255, 0.15); transform: scale(0.98); }
+    100% { background-color: transparent; transform: scale(1); }
+}
+
+/* Gold Flash (Rank 1) - Massive glowing yellow hit */
+@keyframes flashGold {
+    0% { 
+        background-color: rgba(255, 215, 0, 0.4); 
+        transform: scale(0.95); 
+        box-shadow: 0 0 30px #FFD700 inset, 0 0 20px #FFD700; 
+    }
+    100% { 
+        background-color: transparent; 
+        transform: scale(1); 
+        box-shadow: 0 0 0px transparent inset, 0 0 0px transparent; 
+    }
+}
+
+/* Silver Flash (Rank 2) - Bright metallic hit */
+@keyframes flashSilver {
+    0% { 
+        background-color: rgba(192, 192, 192, 0.3); 
+        transform: scale(0.96); 
+        box-shadow: 0 0 20px #C0C0C0 inset, 0 0 15px #C0C0C0; 
+    }
+    100% { 
+        background-color: transparent; 
+        transform: scale(1); 
+        box-shadow: 0 0 0px transparent inset, 0 0 0px transparent; 
+    }
+}
+
+/* Bronze Flash (Rank 3) - Warm copper hit */
+@keyframes flashBronze {
+    0% { 
+        background-color: rgba(205, 127, 50, 0.3); 
+        transform: scale(0.97); 
+        box-shadow: 0 0 15px #CD7F32 inset, 0 0 10px #CD7F32; 
+    }
+    100% { 
+        background-color: transparent; 
+        transform: scale(1); 
+        box-shadow: 0 0 0px transparent inset, 0 0 0px transparent; 
+    }
 }
 .list-item.reordering,
 .list-item.reordering.rank-one,
