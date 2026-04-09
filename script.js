@@ -728,14 +728,23 @@ function triggerOvertakeEffect(winnerName, loserName) {
         e.target.setPointerCapture(e.pointerId); 
     });
 
-    banner.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
-        
-        currentTranslate = e.clientX - startX;
-        
-        banner.style.transform = `translate(calc(-50% + ${currentTranslate}px), -50%)`;
-        banner.style.opacity = 1 - (Math.abs(currentTranslate) / window.innerWidth);
-    });
+    // In your pointermove listener:
+banner.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    
+    currentTranslateX = e.clientX - startX;
+    currentTranslateY = e.clientY - startY; // You'll need to define startY in pointerdown
+    
+    // Calculate rotation: 0.1 degree per pixel moved
+    const rotation = currentTranslateX * 0.1; 
+    
+    banner.style.transform = `
+        translate(calc(-50% + ${currentTranslateX}px), calc(-50% + ${currentTranslateY}px)) 
+        rotate(${rotation}deg)
+    `;
+    
+    banner.style.opacity = 1 - (Math.abs(currentTranslateX) / window.innerWidth);
+});
 
     const handleRelease = (e) => {
         if (!isDragging) return;
