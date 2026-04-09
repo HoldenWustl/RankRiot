@@ -689,8 +689,16 @@ window.seedDatabase = async function() {
     console.log("✅ DONE! All 5 databases are fresh and seeded. Refresh the page.");
 };
 
+let activeOvertakeCleanupTimer = null;
+
 function triggerOvertakeEffect(winnerName, loserName) {
-    if (document.querySelector('.overtake-wrapper')) return;
+    const existing = document.querySelector('.overtake-wrapper');
+    if (existing) existing.remove();
+
+    if (activeOvertakeCleanupTimer) {
+        clearTimeout(activeOvertakeCleanupTimer);
+        activeOvertakeCleanupTimer = null;
+    }
 
     const wrapper = document.createElement('div');
     wrapper.className = 'overtake-wrapper';
@@ -709,23 +717,35 @@ function triggerOvertakeEffect(winnerName, loserName) {
 
     if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
 
-    let autoRemoveTimer;
-    const startAutoRemove = () => {
-        clearTimeout(autoRemoveTimer);
-        autoRemoveTimer = setTimeout(closeAll, 2500);
-    };
+    let autoRemoveTimer = null;
+    let closing = false;
+    const baseTransform = 'translate(-50%, -50%)';
 
     const closeAll = () => {
+        if (closing) return;
+        closing = true;
+
         clearTimeout(autoRemoveTimer);
 
         ribbon.style.transition = 'transform 0.35s ease-in';
         ribbon.style.transform = 'translateY(-100%)';
 
         popup.style.transition = 'transform 0.35s ease-in, opacity 0.25s ease-in';
-        popup.style.transform = 'translate(-50%, -50%) scale(0.85)';
+        popup.style.transform = `${baseTransform} scale(0.85)`;
         popup.style.opacity = '0';
 
-        setTimeout(() => wrapper.remove(), 380);
+        activeOvertakeCleanupTimer = setTimeout(() => {
+            if (wrapper.isConnected) wrapper.remove();
+            if (activeOvertakeCleanupTimer) {
+                clearTimeout(activeOvertakeCleanupTimer);
+                activeOvertakeCleanupTimer = null;
+            }
+        }, 380);
+    };
+
+    const startAutoRemove = () => {
+        clearTimeout(autoRemoveTimer);
+        autoRemoveTimer = setTimeout(closeAll, 2500);
     };
 
     startAutoRemove();
@@ -734,8 +754,6 @@ function triggerOvertakeEffect(winnerName, loserName) {
     let startY = 0;
     let isDragging = false;
     let hasSwiped = false;
-
-    const baseTransform = 'translate(-50%, -50%)';
 
     popup.addEventListener('pointerdown', (e) => {
         e.preventDefault();
@@ -747,10 +765,10 @@ function triggerOvertakeEffect(winnerName, loserName) {
         startY = e.clientY;
 
         popup.setPointerCapture(e.pointerId);
-
         popup.style.animation = 'none';
         popup.style.transition = 'none';
         popup.style.opacity = '1';
+        popup.style.transform = baseTransform;
     });
 
     popup.addEventListener('pointermove', (e) => {
@@ -760,14 +778,12 @@ function triggerOvertakeEffect(winnerName, loserName) {
         const dy = e.clientY - startY;
         const dist = Math.hypot(dx, dy);
 
-        if (!hasSwiped && dist > 8) {
-            hasSwiped = true;
-        }
+        if (!hasSwiped && dist > 8) hasSwiped = true;
 
         if (hasSwiped) {
             const rotation = dx * 0.06;
             popup.style.transform = `${baseTransform} translate3d(${dx}px, ${dy}px, 0) rotate(${rotation}deg)`;
-            popup.style.opacity = '1'; // keep solid while dragging
+            popup.style.opacity = '1';
         }
     });
 
@@ -778,12 +794,8 @@ function triggerOvertakeEffect(winnerName, loserName) {
 
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        const absX = Math.abs(dx);
-        const absY = Math.abs(dy);
 
-        const shouldYeet = hasSwiped && (absX > 60 || absY > 60);
-
-        if (shouldYeet) {
+        if (hasSwiped && (Math.abs(dx) > 60 || Math.abs(dy) > 60)) {
             const angle = Math.atan2(dy, dx);
             const flyX = Math.cos(angle) * 1200;
             const flyY = Math.sin(angle) * 1200;

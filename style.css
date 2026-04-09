@@ -447,17 +447,12 @@ h1.title {
     touch-action: none;      /* CRITICAL: Stops mobile scroll interference */
     user-select: none;       /* Prevents selecting text while swiping */
     -webkit-user-drag: none;
+    overscroll-behavior: contain;
+    cursor: grab;
 }
 
 .overtake-popup h1 { font-family: 'Anton', sans-serif; font-size: 3.5rem; margin: 0; text-shadow: 3px 3px 0 #000; color: white; }
 .overtake-popup p { font-size: 1.2rem; font-weight: bold; margin: 10px 0 0 0; color: white; }
-.overtake-popup {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-    overscroll-behavior: contain;
-    cursor: grab;
-}
 
 .overtake-popup:active {
     cursor: grabbing;
