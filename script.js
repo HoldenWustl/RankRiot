@@ -324,6 +324,8 @@ function createItemElement(id, name, imageUrl) {
     div.innerHTML = `
         <div class="rank-number"></div>
         <div class="item-pic-wrapper">
+            <div class="crown-icon">👑</div>
+            
             <img class="item-pic" src="${safeImage}" alt="${name}" draggable="false" />
             <svg class="mash-trace-svg" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="46"></circle>
@@ -339,7 +341,20 @@ function createItemElement(id, name, imageUrl) {
     `;
     
     const btn = div.querySelector('.mash-btn');
-    btn.addEventListener('pointerdown', (e) => handleMash(id, e));
+    btn.addEventListener('pointerdown', (e) => {
+        // 1. Fire your normal vote logic
+        handleMash(id, e);
+        
+        // 2. Make the crown jump!
+        const crown = div.querySelector('.crown-icon');
+        if (crown) {
+            // Remove the class, then ask the browser to recalculate layout (void offsetWidth).
+            // This ensures the animation restarts from the beginning if they spam-click!
+            crown.classList.remove('vote-bounce');
+            void crown.offsetWidth; 
+            crown.classList.add('vote-bounce');
+        }
+    });
     return div;
 }
 function handleMash(id, e) {
