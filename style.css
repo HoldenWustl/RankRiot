@@ -532,6 +532,48 @@ h1.title {
         box-shadow: 0 0 0px transparent inset, 0 0 0px transparent; 
     }
 }
+/* Container to keep image and SVG perfectly aligned */
+.item-pic-wrapper {
+    position: relative;
+    width: 80px;  /* Match your item-pic size */
+    height: 80px; 
+    margin-right: 15px; /* The margin lives on the wrapper now */
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.item-pic {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-right: 0 !important; /* Force remove old margin from the image */
+}
+
+.mash-trace-svg {
+    position: absolute;
+    top: -5px; /* Offset to allow the stroke/glow to sit outside the image */
+    left: -5px;
+    width: calc(100% + 10px);
+    height: calc(100% + 10px);
+    pointer-events: none;
+    overflow: visible;
+    transform: rotate(-90deg); /* Starts at 12 o'clock */
+}
+
+.mash-trace-svg circle {
+    fill: none;
+    stroke: white;
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-dasharray: 289;
+    stroke-dashoffset: 289;
+    transform-origin: center;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+    opacity: 0; /* Hidden until .animate() runs */
+}
 .list-item.reordering,
 .list-item.reordering.rank-one,
 .list-item.reordering.clashing,

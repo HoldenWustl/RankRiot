@@ -319,12 +319,16 @@ function createItemElement(id, name, imageUrl) {
     div.classList.add('list-item');
     div.id = `item-${id}`; 
     
-    // Fallback ONLY if imageUrl is genuinely missing
     const safeImage = imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ff0055&color=fff&size=128&bold=true`;
 
     div.innerHTML = `
         <div class="rank-number"></div>
-        <img class="item-pic" src="${safeImage}" alt="${name}" draggable="false" />
+        <div class="item-pic-wrapper">
+            <img class="item-pic" src="${safeImage}" alt="${name}" draggable="false" />
+            <svg class="mash-trace-svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="46"></circle>
+            </svg>
+        </div>
         <div class="item-info">
             <h3 class="item-name">${name}</h3>
             <p class="item-votes">0 VOTES</p>
@@ -416,6 +420,20 @@ function handleMash(id, e) {
    // 3. VISUAL JUICE
     createFloatingText(event.clientX, event.clientY, `+${multiplier}`);
     playPopSound(multiplier);
+   // --- ULTRA-SMOOTH TRACE ANIMATION (JS-DRIVEN) ---
+    const circle = itemEl.querySelector('.mash-trace-svg circle');
+    if (circle) {
+        // Circumference is ~289 for r=46
+        circle.animate([
+            { strokeDashoffset: '289', transform: 'scale(0.96)', opacity: 1 },
+            { strokeDashoffset: '0', transform: 'scale(1.08)', opacity: 1, offset: 0.6 },
+            { strokeDashoffset: '-20', transform: 'scale(1.12)', opacity: 0 }
+        ], {
+            duration: 350,
+            easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+            fill: 'none' // Ensures it disappears and resets automatically
+        });
+    }
 
     // --- JUICE: RANK-BASED HIT FLASHES ---
     const cardEl = document.getElementById(`item-${id}`);
