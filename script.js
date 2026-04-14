@@ -295,11 +295,18 @@ function loadBattlefield(categoryName) {
                 itemEl.style.order = index;
                 itemEl.querySelector('.rank-number').innerText = (index + 1);
 
+                // Update this inside loadBattlefield:
                 if (index === 0) {
                     itemEl.classList.add('rank-one');
+                    itemEl.classList.remove('rank-last');
                     itemEl.style.borderColor = 'transparent';
-                } else {
+                } else if (index === updatedItems.length - 1) {
+                    // DEAD LAST!
+                    itemEl.classList.add('rank-last');
                     itemEl.classList.remove('rank-one');
+                    itemEl.style.borderColor = '#444'; // Optional: Give the loser a sad grey border
+                } else {
+                    itemEl.classList.remove('rank-one', 'rank-last');
                     if (index === 1) itemEl.style.borderColor = '#C0C0C0';
                     else if (index === 2) itemEl.style.borderColor = '#CD7F32';
                     else itemEl.style.borderColor = 'transparent';
@@ -325,6 +332,7 @@ function createItemElement(id, name, imageUrl) {
         <div class="rank-number"></div>
         <div class="item-pic-wrapper">
             <div class="crown-icon">👑</div>
+            <div class="trash-icon">🗑️</div>
             
             <img class="item-pic" src="${safeImage}" alt="${name}" draggable="false" />
             <svg class="mash-trace-svg" viewBox="0 0 100 100">
@@ -342,19 +350,25 @@ function createItemElement(id, name, imageUrl) {
     
     const btn = div.querySelector('.mash-btn');
     btn.addEventListener('pointerdown', (e) => {
-        // 1. Fire your normal vote logic
         handleMash(id, e);
         
-        // 2. Make the crown jump!
+        // Bounce the crown (if they have it)
         const crown = div.querySelector('.crown-icon');
         if (crown) {
-            // Remove the class, then ask the browser to recalculate layout (void offsetWidth).
-            // This ensures the animation restarts from the beginning if they spam-click!
             crown.classList.remove('vote-bounce');
             void crown.offsetWidth; 
             crown.classList.add('vote-bounce');
         }
+
+        // Bounce the trash (if they have it)
+        const trash = div.querySelector('.trash-icon');
+        if (trash) {
+            trash.classList.remove('vote-bounce');
+            void trash.offsetWidth; 
+            trash.classList.add('vote-bounce');
+        }
     });
+
     return div;
 }
 function handleMash(id, e) {
@@ -494,6 +508,16 @@ function handleMash(id, e) {
             el.style.order = index;
             el.querySelector('.rank-number').innerText = (index + 1);
             ranksShifted = true;
+        }
+        // --- NEW: Optimistic Icon Snapping ---
+        if (index === 0) {
+            el.classList.add('rank-one');
+            el.classList.remove('rank-last');
+        } else if (index === itemsArray.length - 1) {
+            el.classList.add('rank-last');
+            el.classList.remove('rank-one');
+        } else {
+            el.classList.remove('rank-one', 'rank-last');
         }
     });
 

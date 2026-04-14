@@ -582,6 +582,48 @@ h1.title {
 .list-item.reordering.taking-damage {
     animation: none !important;
 }
+/* 1. The Sticker Trash Can */
+.trash-icon {
+    display: none; 
+    position: absolute;
+    bottom: 50%;       
+    right: 50%;
+    transform: translate(-20%, 0) rotate(15deg); /* Tilted the other way! */
+    font-size: 2.5rem; 
+    z-index: 10;
+    transform-origin: center;
+    
+    /* Same thick white sticker border trick */
+    filter: 
+        drop-shadow(2px 2px 0px white) 
+        drop-shadow(-2px -2px 0px white) 
+        drop-shadow(2px -2px 0px white) 
+        drop-shadow(-2px 2px 0px white) 
+        drop-shadow(0px 6px 6px rgba(0,0,0,0.5));
+}
+
+.rank-last .trash-icon {
+    display: block;
+    /* Rises up from the bottom instead of dropping from the top */
+    animation: trashRise 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes trashRise {
+    0% { transform: translate(-20%, 20px) scale(0) rotate(0deg); opacity: 0; }
+    100% { transform: translate(-20%, 0) scale(1) rotate(15deg); opacity: 1; }
+}
+
+/* Click-Bounce Animation */
+.trash-icon.vote-bounce {
+    animation: trashClickBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes trashClickBounce {
+    0% { transform: translate(-20%, 0) scale(1) rotate(15deg); }
+    /* Bounces UP and tilts more */
+    40% { transform: translate(-20%, -15px) scale(1.3) rotate(25deg); }
+    100% { transform: translate(-20%, 0) scale(1) rotate(15deg); }
+}
 /* 1. The Sticker Crown */
 .crown-icon {
     display: none; 
