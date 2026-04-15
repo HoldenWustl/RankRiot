@@ -371,6 +371,7 @@ document.addEventListener('click', (e) => {
     currentListTitle.innerText = name;
     showScreen('game');
     loadBattlefield(currentCategory);
+    playWooshSound();
 });
 
 // --- Game State ---
@@ -3149,6 +3150,7 @@ function triggerMilestoneNuke(name, totalVotes) {
 }
 // --- VIRAL SHARING MECHANIC ---
 window.triggerNativeShare = async function(context) {
+    playCameraSnap();
     const shareData = {
         title: 'Rank Riot!',
         text: context === 'Battle' 
@@ -3173,8 +3175,50 @@ window.triggerNativeShare = async function(context) {
         console.log('Share canceled or failed:', err);
     }
 };
+function playWooshSound() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const duration = 0.6; // 600ms woosh fits the staggered entrance perfectly
+    const bufferSize = audioCtx.sampleRate * duration;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    // Generate white noise
+    for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1; 
+    }
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+
+    // Create a filter to sweep the frequencies (makes the "wooosh" shape)
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+
+    const gain = audioCtx.createGain();
+
+    // Connect the graph: Noise -> Filter -> Volume -> Output
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+
+    // 1. Sweep the Filter (Muffled -> Bright -> Muffled)
+    filter.frequency.setValueAtTime(100, now);
+    filter.frequency.exponentialRampToValueAtTime(1800, now + duration / 2);
+    filter.frequency.exponentialRampToValueAtTime(100, now + duration);
+
+    // 2. Swell the Volume (Fade In -> Peak -> Fade Out)
+    gain.gain.setValueAtTime(0.001, now); // Start silent
+    gain.gain.exponentialRampToValueAtTime(0.15, now + (duration * 0.4)); // Swell up
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration); // Fade out
+
+    noise.start(now);
+}
 // --- JUICE: RIVALRY RECEIPT ---
 window.triggerRivalryReceipt = function() {
+    playCameraSnap();
     // 1. Sort the current items to find #1 and #2
     const sortedItems = Object.values(itemsData).map(item => ({
         name: item.name,
@@ -3210,6 +3254,7 @@ window.closeReceipt = function() {
 };
 // --- JUICE: AUTO-GENERATE & SHARE RECEIPT IMAGE ---
 window.shareReceiptImage = async function() {
+    playCameraSnap();
     const receiptCard = document.querySelector('.receipt-card');
     const shareBtn = document.getElementById('share-receipt-btn');
     const closeBtn = document.querySelector('.close-receipt');
@@ -3289,4 +3334,51 @@ function animateRankReorder(listEl, mutateDom) {
             });
         }
     });
+}
+function playCameraSnap() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    // 1. The mechanical "click" (Fast frequency drop)
+    const osc = audioCtx.createOscillator();
+    const oscGain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.connect(oscGain);
+    oscGain.connect(audioCtx.destination);
+
+    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.05);
+    
+    oscGain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.05);
+
+    // 2. The shutter "shhh" (Burst of white noise)
+    const bufferSize = audioCtx.sampleRate * 0.1; // 100ms of noise
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1; // Generate random static
+    }
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    
+    const noiseGain = audioCtx.createGain();
+    
+    // Filter the noise to make it crisp and sharp, not rumbly
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 1000;
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
+
+    // Fade the noise out extremely fast
+    noiseGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+
+    noise.start();
 }
