@@ -96,6 +96,76 @@ function setupDailyRotation() {
     }
 }
 // ==========================================
+// 👑 YESTERDAY'S CHAMPIONS
+// ==========================================
+async function loadYesterdaysWinners() {
+    const winnersContainer = document.getElementById('yesterdays-winners-container');
+    if (!winnersContainer) return;
+
+    const masterList = document.getElementById('master-list');
+    if (!masterList) return;
+
+    // 1. Calculate Yesterday's Rotation Index
+    const allCards = Array.from(masterList.querySelectorAll('.cat-card'));
+    const totalCats = allCards.length;
+    const catsPerDay = 5;
+
+    const nyTime = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+    const nyUTC = Date.UTC(nyTime.getFullYear(), nyTime.getMonth(), nyTime.getDate());
+    const dayIndex = Math.floor(nyUTC / (1000 * 60 * 60 * 24));
+
+    // Get the start index for yesterday, wrap around safely if needed
+    let yesterdayStartIndex = ((dayIndex - 1) * catsPerDay) % totalCats;
+    if (yesterdayStartIndex < 0) yesterdayStartIndex += totalCats;
+
+    const yesterdayCategories = [];
+    for (let i = 0; i < catsPerDay; i++) {
+        const cardIndex = (yesterdayStartIndex + i) % totalCats;
+        yesterdayCategories.push(allCards[cardIndex].getAttribute('data-list'));
+    }
+
+    // 2. Setup the UI container
+    winnersContainer.innerHTML = `
+        <h3 class="winners-title">👑 YESTERDAY'S CHAMPIONS 👑</h3>
+        <div class="winners-row" id="winners-row"></div>
+    `;
+    const row = document.getElementById('winners-row');
+
+    // 3. Fetch the top item for each of yesterday's categories
+    yesterdayCategories.forEach(async (catName, index) => {
+        try {
+            const listRef = collection(db, `lists/${catName}/items`);
+            const snap = await getDocs(listRef);
+            
+            let items = [];
+            snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+            
+            if (items.length > 0) {
+                // Sort by highest votes first
+                items.sort((a, b) => b.votes - a.votes);
+                const winner = items[0];
+
+                const winnerEl = document.createElement('div');
+                winnerEl.classList.add('winner-card');
+                winnerEl.style.animationDelay = `${index * 0.1}s`; // Staggered pop-in
+                
+                const safeImage = winner.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(winner.name)}&background=ff0055&color=fff&size=128&bold=true`;
+                
+                winnerEl.innerHTML = `
+                    <div class="winner-pic-wrapper">
+                        <div class="winner-crown">👑</div>
+                        <img src="${safeImage}" alt="${winner.name}" class="winner-pic" draggable="false" />
+                    </div>
+                    <p class="winner-name">${winner.name}</p>
+                `;
+                row.appendChild(winnerEl);
+            }
+        } catch (err) {
+            console.log(`Preload skipped for ${catName}`, err);
+        }
+    });
+}
+// ==========================================
 // 💥 DOPAMINE ENTRANCE TRIGGER
 // ==========================================
 function triggerDopamineEntrance() {
@@ -150,6 +220,7 @@ function startESTTimer() {
 document.addEventListener("DOMContentLoaded", () => {
     setupDailyRotation();
     startESTTimer();
+    loadYesterdaysWinners();
 });
 
 // --- PRELOAD CACHE ---

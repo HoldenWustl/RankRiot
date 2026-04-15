@@ -71,7 +71,7 @@ h1.title {
     font-family: 'Anton', sans-serif;
     font-size: 5rem;
     font-weight: 900;
-    margin: 25vh 0 10px 0;
+    margin: 5vh 0 10px 0;
     letter-spacing: -2px;
     text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
 }
@@ -184,7 +184,104 @@ h1.title {
 
 #back-btn { position: absolute; left: 15px; top: 20px; background: transparent; color: #555; border: none; font-weight: bold; }
 #current-list-title { margin: 0 0 10px 0; font-family: 'Anton', sans-serif; font-size: 1.8rem; letter-spacing: 1px; color: white;}
+/* ==========================================
+   👑 YESTERDAY'S WINNERS (SPLASH SCREEN)
+========================================== */
+.winners-container {
+    margin: 15px auto 25px;
+    width: 95%;
+    max-width: 500px;
+    background: rgba(10, 10, 10, 0.7);
+    border: 2px solid var(--riot-blue, #00ffcc);
+    border-radius: 12px;
+    padding: 12px 5px; /* Slightly reduced horizontal padding */
+    text-align: center;
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+}
 
+.winners-title {
+    color: var(--riot-pink, #ff0055);
+    font-family: 'Anton', sans-serif;
+    letter-spacing: 2px;
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    text-shadow: 0 0 8px rgba(255, 0, 85, 0.6);
+}
+
+/* HORIZONTAL "STORY" STYLE ROW */
+.winners-row {
+    display: flex;
+    justify-content: center; /* Centers them if they fit */
+    align-items: flex-start;
+    gap: 8px; /* Tighter gap for mobile */
+    flex-wrap: nowrap; /* NEVER drop to a second row */
+    overflow-x: auto; /* Allow horizontal swiping on tiny screens */
+    padding-bottom: 5px; 
+    
+    /* Hide scrollbars for a clean look */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+.winners-row::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+}
+
+.winner-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto; /* Prevent them from squishing into ovals */
+    width: 55px; /* Scaled down for mobile */
+    opacity: 0;
+    animation: popInStagger 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.winner-pic-wrapper {
+    position: relative;
+    width: 48px; /* Scaled down */
+    height: 48px; /* Scaled down */
+    border-radius: 50%;
+    border: 2px solid gold; /* Slightly thinner border */
+    margin-bottom: 5px;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.winner-crown {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%) rotate(15deg);
+    font-size: 1.1rem; /* Smaller crown */
+    z-index: 10;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
+}
+
+.winner-pic {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    background: #222; 
+}
+
+.winner-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    color: white;
+    font-size: 0.7rem; /* Smaller text to prevent wrapping */
+    margin: 0;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.1;
+    text-shadow: 1px 1px 2px black;
+    
+    /* Truncate super long names with an ellipsis (...) */
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 /* Combo / Fever Bar */
 #combo-container { width: 100%; text-align: center; }
 #combo-bar-bg { height: 6px; width: 90%; background: #222; border-radius: 10px; margin: 0 auto 5px auto; overflow: hidden; }
