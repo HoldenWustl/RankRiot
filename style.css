@@ -7,6 +7,39 @@
     --text: #ffffff;
     --text-muted: #888899;
 }
+/* ==========================================
+   📱 NATIVE APP BEHAVIORS & BROWSER RESETS
+   ========================================== */
+
+/* 1. HIDE ALL SCROLLBARS GLOBALLY */
+* {
+    /* Chrome, Safari, and Opera */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    /* Firefox */
+    scrollbar-width: none; 
+    /* IE and Edge */
+    -ms-overflow-style: none; 
+}
+
+/* 2. LOCK DOWN THE BODY */
+
+
+/* 3. APP-IFY ALL ELEMENTS */
+* {
+    /* 🛑 Stops users from accidentally highlighting text when spam-tapping */
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+
+    /* 🛑 Removes the ugly blue flash that happens when you tap a button on mobile */
+    -webkit-tap-highlight-color: transparent;
+
+    /* 🛑 Prevents "Double-Tap to Zoom" on iOS/Android */
+    touch-action: manipulation;
+}
+
 
 body, html {
     margin: 0; padding: 0;
@@ -162,7 +195,6 @@ h1.title {
 #ranking-list {
     display: flex; flex-direction: column;
     width: 100%; padding: 10px; box-sizing: border-box; gap: 8px;
-    padding-bottom: 30vh; /* space to scroll */
 }
 
 .list-item {
@@ -612,7 +644,89 @@ h1.title {
     0% { transform: translate(-20%, 20px) scale(0) rotate(0deg); opacity: 0; }
     100% { transform: translate(-20%, 0) scale(1) rotate(15deg); opacity: 1; }
 }
+/* ==========================================
+   🎮 GAME SCREEN: CRANKED-UP GLITCH & CRT BACKGROUND
+   ========================================== */
 
+#game-screen {
+    position: relative;
+    overflow: hidden;
+    background-color: #08080a; 
+    z-index: 1; /* Establishes a solid base layer */
+}
+
+/* 1. The CRT Scanline Overlay (Darker and thicker) */
+#game-screen::before {
+    content: "";
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0),
+        rgba(255, 255, 255, 0) 50%,
+        rgba(0, 0, 0, 0.4) 50%, /* Doubled the darkness of the scanlines */
+        rgba(0, 0, 0, 0.4)
+    );
+    background-size: 100% 6px; /* Slightly thicker lines */
+    z-index: 2; /* Pushed up in the stack */
+    pointer-events: none; 
+}
+/* 2. The Smooth Rotating Red Pulse */
+#game-screen::after {
+    content: "";
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    /* Two off-center faint red glowing orbs */
+    background: radial-gradient(circle at 40% 45%, rgba(255, 10, 50, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 60% 55%, rgba(180, 0, 20, 0.08) 0%, transparent 50%);
+    z-index: 1; /* Sits right behind the scanlines */
+    pointer-events: none;
+    /* 'linear' makes the rotation perfectly smooth with no pausing */
+    animation: smoothRedPulse 12s linear infinite;
+}
+
+/* 3. The Animation Keyframes (Rotation + Pulse) */
+@keyframes smoothRedPulse {
+    0% { 
+        transform: rotate(0deg) scale(1); 
+        opacity: 0.8;
+    }
+    50% { 
+        transform: rotate(180deg) scale(1.15); /* The "Pulse" breathing out */
+        opacity: 1;
+    }
+    100% { 
+        transform: rotate(360deg) scale(1); 
+        opacity: 0.8;
+    }
+}
+
+/* 3. Force Game Content to the Very Top */
+#game-screen > * {
+    position: relative;
+    z-index: 10; /* Forces your title, timer, and cards ABOVE the background effects */
+}
+
+/* The Animation Keyframes (Faster and more movement) */
+@keyframes arcadeBreathe {
+    0% { 
+        transform: translate(0, 0) scale(1); 
+    }
+    50% { 
+        transform: translate(-4%, 5%) scale(1.1); 
+        filter: hue-rotate(25deg); 
+    }
+    100% { 
+        transform: translate(4%, -4%) scale(1); 
+        filter: hue-rotate(-25deg); 
+    }
+}
 /* Click-Bounce Animation */
 .trash-icon.vote-bounce {
     animation: trashClickBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
