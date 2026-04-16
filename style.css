@@ -933,7 +933,20 @@ body {
     display: inline-block;
     /* This animation is applied dynamically in JS so it restarts cleanly */
 }
+/* --- CUSTOM PURPLE OVERRIDE --- */
+#global-ticker-container.purple-theme {
+    background: rgba(157, 0, 255, 0.95) !important;
+    box-shadow: 0 0 50px #9d00ff !important;
+}
+/* --- BANNER FADE OUT ANIMATION --- */
+.fade-out-banner {
+    animation: bannerFadeOut 0.5s ease-out forwards !important;
+}
 
+@keyframes bannerFadeOut {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
 @keyframes rushAcross {
     0% { transform: translateX(100vw); }
     100% { transform: translateX(-150%); } /* Scrolls all the way off left */

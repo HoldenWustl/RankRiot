@@ -1,29 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>RankRiot - SPAM IT</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;700;900&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <meta property="og:title" content="Rank Riot!">
-<meta property="og:description" content="Settle the debate. Defend your GOATs. Vote now.">
-<meta property="og:image" content="https://rankriot.onrender.com/rankriotcard.png">
-<meta property="og:url" content="https://rankriot.onrender.com">
-<meta name="twitter:card" content="summary_large_image">
+    <meta property="og:description" content="Settle the debate. Defend your GOATs. Vote now.">
+    <meta property="og:image" content="https://rankriot.onrender.com/rankriotcard.png">
+    <meta property="og:url" content="https://rankriot.onrender.com">
+    <meta name="twitter:card" content="summary_large_image">
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-4FVHVKME1E"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4FVHVKME1E"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
 
-  gtag('config', 'G-4FVHVKME1E');
-</script>
+        gtag('config', 'G-4FVHVKME1E');
+    </script>
 </head>
+
 <body>
-    
+
     <div id="ambient-particles"></div>
 
     <div id="splash-screen" class="screen">
@@ -32,155 +36,186 @@
             <div class="glow-orb"></div>
         </div>
         <p class="subtitle">
-        <span>SETTLE THE DEBATE.</span>
-        <span>DEFEND YOUR GOATS.</span>
-    </p>
-    <div id="yesterdays-winners-container" class="winners-container"></div>
+            <span>SETTLE THE DEBATE.</span>
+            <span>DEFEND YOUR GOATS.</span>
+        </p>
+        <div id="yesterdays-winners-container" class="winners-container"></div>
 
         <div class="action-buttons">
             <button id="play-btn" class="glow-btn">ENTER THE RIOT</button>
             <button class="viral-share-btn main-share" onclick="triggerNativeShare('Main')">
-        <span class="share-icon">🔗</span> CHALLENGE FRIENDS
-    </button>
-            </div>
-       
+                <span class="share-icon">🔗</span> CHALLENGE FRIENDS
+            </button>
+        </div>
+
     </div>
 
-   <div id="category-screen" class="screen hidden">
+    <div id="category-screen" class="screen hidden">
         <h2 class="header-text glitch-text">SELECT LIST TO MASSACRE</h2>
-       <div id="daily-timer-container" style="text-align: center; margin: 20px 0;">
+        <div id="daily-timer-container" style="text-align: center; margin: 20px 0;">
             <h2 class="glitch-text" style="margin: 0; font-size: 2rem;">🔥 LIVE DEBATES</h2>
-            <div id="est-timer" style="font-size: 1.5rem; color: #00ffcc; font-weight: 900; letter-spacing: 2px;">--:--:-- UNTIL RESULTS LOCK</div>
+            <div id="est-timer" style="font-size: 1.5rem; color: #00ffcc; font-weight: 900; letter-spacing: 2px;">
+                --:--:-- UNTIL RESULTS LOCK</div>
         </div>
 
         <div class="category-list" id="active-list">
-            </div>
+        </div>
 
         <div style="text-align: center; margin: 50px 0 15px; opacity: 0.7;">
             <h2 style="margin: 0; font-size: 1.5rem;">⏳ DROPPING TOMORROW</h2>
         </div>
 
-        <div class="category-list disabled-list" id="upcoming-list" style="filter: grayscale(1); pointer-events: none; opacity: 0.4;">
-            </div>
+        <div class="category-list disabled-list" id="upcoming-list"
+            style="filter: grayscale(1); pointer-events: none; opacity: 0.4;">
+        </div>
 
         <div id="master-list" style="display: none;">
             <div class="cat-card" data-list="presidents" style="--card-color: #ff0055;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🇺🇸</span><span class="cat-name">US Presidents</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🇺🇸</span><span class="cat-name">US Presidents</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="spiderman" style="--card-color: #ff0000;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🕷️</span><span class="cat-name">Spider-Man Movies</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🕷️</span><span class="cat-name">Spider-Man Movies</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="fastfood" style="--card-color: #ffaa00;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🍔</span><span class="cat-name">Fast Food Chains</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🍔</span><span class="cat-name">Fast Food Chains</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="rappers" style="--card-color: #b000ff;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🎤</span><span class="cat-name">GOAT Rappers</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🎤</span><span class="cat-name">GOAT Rappers</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="shows" style="--card-color: #00e5ff;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">📺</span><span class="cat-name">Elite TV Shows</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">📺</span><span class="cat-name">Elite TV Shows</span><span
+                    class="cat-arrow">🔥</span>
             </div>
 
             <div class="cat-card" data-list="streamers" style="--card-color: #9146FF;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🎧</span><span class="cat-name">Top Streamers</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🎧</span><span class="cat-name">Top Streamers</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="energy_drinks" style="--card-color: #00ff00;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">⚡</span><span class="cat-name">Energy Drinks</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">⚡</span><span class="cat-name">Energy Drinks</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="sweaty_games" style="--card-color: #ff4500;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🎮</span><span class="cat-name">Sweaty Games</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🎮</span><span class="cat-name">Sweaty Games</span><span
+                    class="cat-arrow">🔥</span>
             </div>
 
             <div class="cat-card" data-list="candy_bars" style="--card-color: #d2691e;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🍫</span><span class="cat-name">Candy Bars</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🍫</span><span class="cat-name">Candy Bars</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="gaming_consoles" style="--card-color: #555555;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🕹️</span><span class="cat-name">Gaming Consoles</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🕹️</span><span class="cat-name">Gaming Consoles</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="cereals" style="--card-color: #ff69b4;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🥣</span><span class="cat-name">Cereal Brands</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🥣</span><span class="cat-name">Cereal Brands</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="sodas" style="--card-color: #1e90ff;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🥤</span><span class="cat-name">Soda Brands</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🥤</span><span class="cat-name">Soda Brands</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="pizza_toppings" style="--card-color: #ff6347;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🍕</span><span class="cat-name">Pizza Toppings</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🍕</span><span class="cat-name">Pizza Toppings</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="ice_cream" style="--card-color: #f5deb3;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🍦</span><span class="cat-name">Ice Cream Flavors</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🍦</span><span class="cat-name">Ice Cream Flavors</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="pixar_movies" style="--card-color: #00ced1;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🎬</span><span class="cat-name">Pixar Movies</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🎬</span><span class="cat-name">Pixar Movies</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="batman_actors" style="--card-color: #2f4f4f;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🦇</span><span class="cat-name">Batman Actors</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🦇</span><span class="cat-name">Batman Actors</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="star_wars" style="--card-color: #ffd700;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">⚔️</span><span class="cat-name">Star Wars Movies</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">⚔️</span><span class="cat-name">Star Wars Movies</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="social_media" style="--card-color: #ff1493;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">📱</span><span class="cat-name">Social Media Apps</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">📱</span><span class="cat-name">Social Media Apps</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="fast_food_fries" style="--card-color: #ffa500;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🍟</span><span class="cat-name">Fast Food Fries</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🍟</span><span class="cat-name">Fast Food Fries</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="chips" style="--card-color: #ff4500;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🌶️</span><span class="cat-name">Potato Chips</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🌶️</span><span class="cat-name">Potato Chips</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="dog_breeds" style="--card-color: #8b4513;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🐶</span><span class="cat-name">Dog Breeds</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🐶</span><span class="cat-name">Dog Breeds</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="cn_shows" style="--card-color: #000000;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">⬛</span><span class="cat-name">Cartoon Network</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">⬛</span><span class="cat-name">Cartoon Network</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="nick_shows" style="--card-color: #ff8c00;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🟧</span><span class="cat-name">Nickelodeon 90s</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🟧</span><span class="cat-name">Nickelodeon 90s</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="breakfast" style="--card-color: #f0e68c;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🥞</span><span class="cat-name">Breakfast Foods</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🥞</span><span class="cat-name">Breakfast Foods</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="smash_bros" style="--card-color: #dc143c;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">💥</span><span class="cat-name">Smash Bros Fighters</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">💥</span><span class="cat-name">Smash Bros Fighters</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="car_brands" style="--card-color: #4682b4;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🏎️</span><span class="cat-name">Car Brands</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🏎️</span><span class="cat-name">Car Brands</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="harry_potter" style="--card-color: #800080;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🪄</span><span class="cat-name">Harry Potter Movies</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🪄</span><span class="cat-name">Harry Potter Movies</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="disney_villains" style="--card-color: #4b0082;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🦹</span><span class="cat-name">Disney Villains</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🦹</span><span class="cat-name">Disney Villains</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="streaming" style="--card-color: #00fa9a;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">▶️</span><span class="cat-name">Streaming Services</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">▶️</span><span class="cat-name">Streaming Services</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="fruits" style="--card-color: #32cd32;">
                 <div class="card-glare"></div>
@@ -188,7 +223,8 @@
             </div>
             <div class="cat-card" data-list="anime" style="--card-color: #ff00ff;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🗡️</span><span class="cat-name">Anime Series</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🗡️</span><span class="cat-name">Anime Series</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="sitcoms" style="--card-color: #4169e1;">
                 <div class="card-glare"></div>
@@ -196,11 +232,13 @@
             </div>
             <div class="cat-card" data-list="shoes" style="--card-color: #708090;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">👟</span><span class="cat-name">Shoe Brands</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">👟</span><span class="cat-name">Shoe Brands</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="pop_stars" style="--card-color: #ffb6c1;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">✨</span><span class="cat-name">Female Pop Stars</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">✨</span><span class="cat-name">Female Pop Stars</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="emojis" style="--card-color: #ffd700;">
                 <div class="card-glare"></div>
@@ -212,34 +250,38 @@
             </div>
             <div class="cat-card" data-list="superheroes" style="--card-color: #191970;">
                 <div class="card-glare"></div>
-                <span class="cat-icon">🦸</span><span class="cat-name">Superheroes</span><span class="cat-arrow">🔥</span>
+                <span class="cat-icon">🦸</span><span class="cat-name">Superheroes</span><span
+                    class="cat-arrow">🔥</span>
             </div>
             <div class="cat-card" data-list="holidays" style="--card-color: #c71585;">
                 <div class="card-glare"></div>
                 <span class="cat-icon">🎄</span><span class="cat-name">Holidays</span><span class="cat-arrow">🔥</span>
             </div>
-            </div>
+        </div>
 
         <div class="global-ticker-container">
             <div class="global-ticker-label">🚨 LIVE</div>
             <div class="global-ticker-track">
-                <span class="ticker-text" id="ticker-content">WASHINGTON OVERTAKES LINCOLN BY 5 VOTES! • SPIDER-MAN 2 CROSSES 10K VOTES! • SOMEONE JUST NUKED MCDONALDS! • </span>
-                <span class="ticker-text" id="ticker-content-clone">WASHINGTON OVERTAKES LINCOLN BY 5 VOTES! • SPIDER-MAN 2 CROSSES 10K VOTES! • SOMEONE JUST NUKED MCDONALDS! • </span>
+                <span class="ticker-text" id="ticker-content">WASHINGTON OVERTAKES LINCOLN BY 5 VOTES! • SPIDER-MAN 2
+                    CROSSES 10K VOTES! • SOMEONE JUST NUKED MCDONALDS! • </span>
+                <span class="ticker-text" id="ticker-content-clone">WASHINGTON OVERTAKES LINCOLN BY 5 VOTES! •
+                    SPIDER-MAN 2 CROSSES 10K VOTES! • SOMEONE JUST NUKED MCDONALDS! • </span>
             </div>
         </div>
     </div>
 
     <div id="game-screen" class="screen hidden">
-      <div id="global-ticker-container" class="hidden">
-    <div id="global-ticker-text">🚨 TRUMP JUST CRUSHED BIDEN! 🚨</div>
-</div>
+        <div id="global-ticker-container" class="hidden">
+            <div id="global-ticker-text">🚨 TRUMP JUST CRUSHED BIDEN! 🚨</div>
+        </div>
         <div id="sticky-header">
-         
+
             <button id="back-btn">BACK</button>
             <h2 id="current-list-title">PRESIDENTS</h2>
-            <div id="game-est-timer" style="font-size: 1.2rem; color: #00ffcc; font-weight: 900; letter-spacing: 2px; text-align: center; margin-bottom: 20px;">
-        --:--:-- UNTIL RESULTS LOCK
-    </div>
+            <div id="game-est-timer"
+                style="font-size: 1.2rem; color: #00ffcc; font-weight: 900; letter-spacing: 2px; text-align: center; margin-bottom: 20px;">
+                --:--:-- UNTIL RESULTS LOCK
+            </div>
             <div id="combo-container">
                 <div id="combo-bar-bg">
                     <div id="combo-bar-fill"></div>
@@ -249,42 +291,97 @@
         </div>
 
         <div id="ranking-list">
-            </div>
-            <button class="viral-share-btn game-share" onclick="triggerRivalryReceipt()">
-        <span class="share-icon">📸</span> SNAP THE BEEF
-    </button>
+        </div>
+        <button class="viral-share-btn game-share" onclick="triggerRivalryReceipt()">
+            <span class="share-icon">📸</span> SNAP THE BEEF
+        </button>
     </div>
     <div id="receipt-modal" class="hidden">
-    <div class="receipt-card">
-        <h2 class="glitch-text" style="font-size: 3rem; margin-bottom: 0;">TALE OF THE TAPE</h2>
-        <p class="receipt-subtitle">RANK RIOT: LIVE UPDATE</p>
-        
-        <div class="receipt-battle">
-            <div class="receipt-fighter" id="receipt-fighter-1">
-                <img src="" id="receipt-img-1" alt="Fighter 1">
-                <h3 id="receipt-name-1">NAME 1</h3>
-                <p id="receipt-votes-1" class="receipt-votes">0 VOTES</p>
-            </div>
-            
-            <div class="receipt-vs">VS</div>
-            
-            <div class="receipt-fighter" id="receipt-fighter-2">
-                <img src="" id="receipt-img-2" alt="Fighter 2">
-                <h3 id="receipt-name-2">NAME 2</h3>
-                <p id="receipt-votes-2" class="receipt-votes">0 VOTES</p>
-            </div>
-        </div>
+        <div class="receipt-card">
+            <h2 class="glitch-text" style="font-size: 3rem; margin-bottom: 0;">TALE OF THE TAPE</h2>
+            <p class="receipt-subtitle">RANK RIOT: LIVE UPDATE</p>
 
-        <div class="receipt-gap">
-            Gap: <span id="receipt-vote-diff">0</span> Votes!
-        </div>
+            <div class="receipt-battle">
+                <div class="receipt-fighter" id="receipt-fighter-1">
+                    <img src="" id="receipt-img-1" alt="Fighter 1">
+                    <h3 id="receipt-name-1">NAME 1</h3>
+                    <p id="receipt-votes-1" class="receipt-votes">0 VOTES</p>
+                </div>
 
-        <button class="close-receipt" onclick="closeReceipt()">X</button>
-       <button id="share-receipt-btn" class="screenshot-hint" onclick="shareReceiptImage()">
-    📸 SHARE THIS BEEF 📸
-</button>
+                <div class="receipt-vs">VS</div>
+
+                <div class="receipt-fighter" id="receipt-fighter-2">
+                    <img src="" id="receipt-img-2" alt="Fighter 2">
+                    <h3 id="receipt-name-2">NAME 2</h3>
+                    <p id="receipt-votes-2" class="receipt-votes">0 VOTES</p>
+                </div>
+            </div>
+
+            <div class="receipt-gap">
+                Gap: <span id="receipt-vote-diff">0</span> Votes!
+            </div>
+
+            <button class="close-receipt" onclick="closeReceipt()">X</button>
+            <button id="share-receipt-btn" class="screenshot-hint" onclick="shareReceiptImage()">
+                📸 SHARE THIS BEEF 📸
+            </button>
+        </div>
+       
     </div>
-</div>
+    <button id="open-ticker-btn"
+    style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 99; background: #ff0044; color: white; border: 2px solid white; border-radius: 50%; width: 60px; height: 60px; font-size: 1.5rem; box-shadow: 0 0 15px #ff0044; cursor: pointer;">
+    📣
+</button>
+
+        <div id="ticker-modal"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+            <div
+                style="background: #111; border: 2px solid #ff0044; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; color: white;">
+                <h3 style="margin-top: 0; color: #ff0044; text-transform: uppercase;">Broadcast to the Riot</h3>
+
+                <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px;">
+                    <select id="madlib-subject"
+                        style="padding: 10px; background: #222; color: white; border: 1px solid #444; border-radius: 6px;">
+                        <option value="Option A">Option A</option>
+                        <option value="Option B">Option B</option>
+                    </select>
+
+                    <select id="madlib-action"
+                        style="padding: 10px; background: #222; color: white; border: 1px solid #444; border-radius: 6px;">
+                        <option value="ABSOLUTELY CLEARS">ABSOLUTELY CLEARS</option>
+                        <option value="IS GETTING DESTROYED BY">IS GETTING DESTROYED BY</option>
+                        
+                        <option value="EASILY DOGWALKS">EASILY DOGWALKS</option>
+                        <option value="IS COMPLETELY WASHED COMPARED TO">IS COMPLETELY WASHED COMPARED TO</option>
+                        <option value="WIPES THE FLOOR WITH">WIPES THE FLOOR WITH</option>
+                        <option value="IS A TOTAL FRAUD NEXT TO">IS A TOTAL FRAUD NEXT TO</option>
+                        <option value="WOULD LITERALLY FOLD TO">WOULD LITERALLY FOLD TO</option>
+                        <option value="IS OVERRATED! VOTE FOR">IS OVERRATED! VOTE FOR</option>
+                        
+                        <option value="IS THE TRUE GOAT OVER">IS THE TRUE GOAT OVER</option>
+                        <option value="DESERVES WAY MORE RESPECT THAN">DESERVES WAY MORE RESPECT THAN</option>
+                        <option value="LITERALLY OWNS">LITERALLY OWNS</option>
+                        
+                        <option value="NEEDS YOUR VOTES TO BEAT">NEEDS YOUR VOTES TO BEAT</option>
+                    </select>
+
+                    <select id="madlib-target"
+                        style="padding: 10px; background: #222; color: white; border: 1px solid #444; border-radius: 6px;">
+                        <option value="Option B">Option B</option>
+                        <option value="Option A">Option A</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="close-ticker-btn"
+                        style="padding: 10px 20px; background: #444; border: none; color: white; border-radius: 6px; cursor: pointer;">CANCEL</button>
+                    <button id="send-ticker-btn"
+                        style="padding: 10px 20px; background: #ff0044; border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer;">SEND
+                        IT</button>
+                </div>
+            </div>
+        </div>
     <script type="module" src="script.js"></script>
 </body>
+
 </html>
