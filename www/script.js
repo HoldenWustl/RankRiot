@@ -37,7 +37,8 @@ const comboBarFill = document.getElementById('combo-bar-fill');
 const comboText = document.getElementById('combo-text');
 const currentListTitle = document.getElementById('current-list-title');
 const body = document.body;
-
+// --- GLOBAL BOOST STATE ---
+let isDoubleClicksActive = false;
 // --- AUDIO DOPAMINE (Web Audio API) ---
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
@@ -54,6 +55,46 @@ let recentTickerMessages = [
     "WAITING FOR FIRST BLOOD", 
     "CHOOSE YOUR BATTLEFIELD"
 ];
+
+// --- 2X REWARDED AD LOGIC ---
+const adBtn = document.getElementById('double-click-ad-btn');
+
+if (adBtn) {
+    adBtn.addEventListener('click', () => {
+        // Prevent clicking if the timer is already running
+        if (isDoubleClicksActive) return;
+
+        // 1. Show the "Ad"
+        alert("Simulating Ad: Imagine a 15-second video of a fake mobile game here!");
+
+        // 2. Activate the Boost
+        isDoubleClicksActive = true;
+        let timeLeft = 30;
+
+        // 3. Change Button Styling to "Active Mode"
+        adBtn.classList.add('active-boost');
+
+        // 4. Start the Countdown
+        const timerInterval = setInterval(() => {
+            timeLeft--;
+            
+            if (timeLeft > 0) {
+                adBtn.innerHTML = `🔥 2X ACTIVE: ${timeLeft}s`;
+            } else {
+                // 5. Timer reaches 0, reset everything
+                clearInterval(timerInterval);
+                isDoubleClicksActive = false;
+                
+                // Revert to original styling & structure
+                adBtn.classList.remove('active-boost');
+                adBtn.innerHTML = `
+                    <span class="ad-icon">📺</span>
+                    <span id="ad-text">2X VOTES</span>
+                `;
+            }
+        }, 1000); // Runs every 1000 milliseconds (1 second)
+    });
+}
 // ==========================================
 // 🕒 DAILY ROTATION & TIMER LOGIC
 // ==========================================
@@ -457,7 +498,7 @@ let multiplier = 1;
 let comboTimer;
 let currentFocusId = null;
 let consecutiveClicks = 0;
-const FIRE_THRESHOLD = 50; // Clicks required to ignite
+const FIRE_THRESHOLD = 150; // Clicks required to ignite
 let lastOvertakeTime = 0;
 const OVERTAKE_COOLDOWN = 5000; // 5 seconds
 // Firebase Batching State (Saves free tier)
@@ -621,6 +662,15 @@ function createItemElement(id, name, imageUrl) {
 }
 function handleMash(id, e) {
     spawnEffect(e.clientX, e.clientY, equippedEffect, document.body);
+
+    // --- NEW: CALCULATE TOTAL CLICK POWER ---
+    // If the 2X boost is active, double whatever their current combo multiplier is.
+    // Ensure we default to 1 if `multiplier` isn't defined yet.
+    let baseMultiplier = typeof multiplier !== 'undefined' ? multiplier : 1;
+    let clickPower = (typeof isDoubleClicksActive !== 'undefined' && isDoubleClicksActive) 
+                     ? baseMultiplier * 2 
+                     : baseMultiplier;
+
     // 1. TRACK CONSECUTIVE CLICKS FOR "ON FIRE" MODE
     if (currentFocusId === id) {
         consecutiveClicks++;
@@ -645,7 +695,7 @@ function handleMash(id, e) {
 
     // 2. Combo / Multiplier Calc (Your existing code)
     comboClicks++;
-    updateCombo();
+    updateCombo(); // Assuming updateCombo() updates the global `multiplier`
     
     // --- THE ON FIRE SPLASH DAMAGE ---
     if (isOnFire) {
@@ -657,9 +707,9 @@ function handleMash(id, e) {
         if (myIndex >= 0 && myIndex < sortedItems.length - 1) {
             const victimId = sortedItems[myIndex + 1].id;
             
-            // Subtract 1 from pending votes
+            // Steal votes equivalent to your current click power! (2X steals double!)
             if (!pendingVotes[victimId]) pendingVotes[victimId] = 0;
-            pendingVotes[victimId] -= 1; 
+            pendingVotes[victimId] -= clickPower; 
             
             // Update Victim UI immediately
             const victimBase = itemsData[victimId].votes;
@@ -675,35 +725,39 @@ function handleMash(id, e) {
             }
         }
     }
- // --- NEW: THE MILESTONE MATH ---
+
+    // --- THE MILESTONE MATH ---
     const currentBase = itemsData[id] ? itemsData[id].votes : 0;
     const oldTotal = currentBase + (pendingVotes[id] || 0); // Score before this click
 
-    // 2. Optimistic UI Update
+    // 2. Optimistic UI Update (USE CLICK POWER HERE)
     if (!pendingVotes[id]) pendingVotes[id] = 0;
-    pendingVotes[id] += multiplier;
+    pendingVotes[id] += clickPower;
     
     const newTotal = currentBase + pendingVotes[id]; // Score after this click
-    // --- NEW: TICKER UNLOCK LOGIC ---
-    sessionVotes += multiplier;
+    
+    // --- TICKER UNLOCK LOGIC (USE CLICK POWER HERE) ---
+    sessionVotes += clickPower;
     if (sessionVotes >= 100) {
         unlockTickerButton();
         sessionVotes = 0; // Reset counter so they must mash 100 more times for the next message
     }
+
     // Update display text immediately
     const voteDisplay = document.querySelector(`#item-${id} .item-votes`);
     voteDisplay.innerText = newTotal.toLocaleString() + ' VOTES';
 
     // --- CHECK FOR MILESTONE NUKE (Every 100 votes) ---
-    // Change the 100 to 1000 or 10000 when your app gets huge!
     if (Math.floor(oldTotal / 100) < Math.floor(newTotal / 100)) {
         triggerMilestoneNuke(itemsData[id].name, newTotal);
     }
 
-   // 3. VISUAL JUICE
-    createFloatingText(event.clientX, event.clientY, `+${multiplier}`);
-    playPopSound(multiplier);
-   // --- ULTRA-SMOOTH TRACE ANIMATION (JS-DRIVEN) ---
+    // 3. VISUAL JUICE
+    // Show the actual points gained (+2, +4, +10, etc.)
+    createFloatingText(e.clientX, e.clientY, `+${clickPower}`);
+    playPopSound(clickPower);
+
+    // --- ULTRA-SMOOTH TRACE ANIMATION (JS-DRIVEN) ---
     const circle = itemEl.querySelector('.mash-trace-svg circle');
     if (circle) {
         // Circumference is ~289 for r=46
@@ -738,10 +792,11 @@ function handleMash(id, e) {
     
     // Mobile Haptics
     if (navigator.vibrate) {
-        if(multiplier === 10) navigator.vibrate(25);
+        if(clickPower >= 10) navigator.vibrate(25);
         else navigator.vibrate(10); 
     }
 
+    // --- SORTING & RANKING LOGIC ---
     let itemsArray = Object.values(itemsData).map(item => ({
         id: item.id,
         name: item.name,
@@ -763,7 +818,7 @@ function handleMash(id, e) {
             el.querySelector('.rank-number').innerText = (index + 1);
             ranksShifted = true;
         }
-        // --- NEW: Optimistic Icon Snapping ---
+        // --- Optimistic Icon Snapping ---
         if (index === 0) {
             el.classList.add('rank-one');
             el.classList.remove('rank-last');
@@ -782,24 +837,24 @@ function handleMash(id, e) {
     }
 
     // 5. DID WE OVERTAKE?
-if (newRank < oldRank) {
-    const now = Date.now();
-    // Only trigger if enough time has passed since the last one
-    if (now - lastOvertakeTime > OVERTAKE_COOLDOWN) {
-        let winnerName = itemsData[id].name;
-        let loserName = itemsArray[newRank + 1].name;
-        
-        triggerOvertakeEffect(winnerName, loserName);
-        lastOvertakeTime = now; // Reset the cooldown
-        
-        // Firebase update...
-        setDoc(doc(db, "global", "latest_event"), {
-            winner: winnerName,
-            loser: loserName,
-            timestamp: now
-        });
+    if (newRank < oldRank) {
+        const now = Date.now();
+        // Only trigger if enough time has passed since the last one
+        if (now - lastOvertakeTime > OVERTAKE_COOLDOWN) {
+            let winnerName = itemsData[id].name;
+            let loserName = itemsArray[newRank + 1].name;
+            
+            triggerOvertakeEffect(winnerName, loserName);
+            lastOvertakeTime = now; // Reset the cooldown
+            
+            // Firebase update...
+            setDoc(doc(db, "global", "latest_event"), {
+                winner: winnerName,
+                loser: loserName,
+                timestamp: now
+            });
+        }
     }
-}
     // 6. ARE WE IN A 1v1 CLASH? 
     else if (newRank > 0) {
         let gap = itemsArray[newRank - 1].total - itemsArray[newRank].total;
@@ -810,7 +865,6 @@ if (newRank < oldRank) {
         }
     }
 }
-
 
 // --- Firebase Batch Writer (Critical for Free Tier) ---
 // Ticks every 2 seconds to send buffered clicks.
@@ -833,23 +887,52 @@ setInterval(() => {
 // --- Juice: Combo & Fever Mode Logic ---
 function updateCombo() {
     clearTimeout(comboTimer);
-    // 40 clicks fast sets off Fever mode
-    let barPercentage = Math.min((comboClicks / 40) * 100, 100);
+    
+    // 1. The New Ceiling: 150 clicks is now the max for the visual bar
+    const MAX_CLICKS = 150;
+    let barPercentage = Math.min((comboClicks / MAX_CLICKS) * 100, 100);
     comboBarFill.style.width = `${barPercentage}%`;
 
-    if (comboClicks >= 40) {
+    // 2. The Multiplier Tiers (Must be ordered Highest to Lowest)
+    if (comboClicks >= 150) {
+        // SUPER HARD: Requires sustained aggressive mashing
         multiplier = 10;
         comboText.innerText = "🔥 10x FEVER RIOT! 🔥";
         comboText.style.color = getCssVar('--riot-pink');
         comboBarFill.style.background = getCssVar('--riot-pink');
         body.classList.add('shake', 'fever-pulse');
+        
+    } else if (comboClicks >= 80) {
+        // PRETTY HARD: They are sweating now
+        multiplier = 5;
+        comboText.innerText = "⚡ 5x UNSTOPPABLE ⚡";
+        comboText.style.color = "#ffaa00"; /* Neon Orange */
+        comboBarFill.style.background = "#ffaa00";
+        body.classList.remove('shake', 'fever-pulse'); // Keep UI clean until the final tier
+        
+    } else if (comboClicks >= 40) {
+        // GETTING WARM: Your old 10x is now just a 3x
+        multiplier = 3;
+        comboText.innerText = "3x RAMPAGE";
+        comboText.style.color = "#b500ff"; /* Neon Purple */
+        comboBarFill.style.background = "#b500ff";
+        
     } else if (comboClicks >= 15) {
+        // FIRST BLOOD
         multiplier = 2;
         comboText.innerText = "2x MULTIPLIER";
         comboText.style.color = getCssVar('--riot-blue');
+        comboBarFill.style.background = getCssVar('--riot-blue');
+        
+    } else {
+        // BASE STATE
+        multiplier = 1;
+        comboText.innerText = "1x SPAM";
+        comboText.style.color = getCssVar('--text'); 
+        comboBarFill.style.background = getCssVar('--text'); 
     }
 
-    // Drop combo if no clicks for 0.8s
+    // Drop combo entirely if they stop clicking for 0.8 seconds
     comboTimer = setTimeout(resetComboUI, 800); 
 }
 

@@ -51,7 +51,91 @@ body, html {
     touch-action: manipulation; /* Removes 300ms tap delay */
     -webkit-tap-highlight-color: transparent;
 }
+/* --- BASE AD BUTTON --- */
+.riot-ad-btn {
+    background: linear-gradient(135deg, var(--dark-accent), var(--bg));
+    color: var(--text);
+    border: 2px solid var(--riot-blue);
+    padding: 12px 24px;
+    font-family: 'Impact', 'Arial Black', sans-serif; /* High energy font */
+    font-size: 1.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: 6px;
+    box-shadow: 0 0 12px var(--riot-blue), inset 0 0 8px rgba(0, 229, 255, 0.3);
+    transition: all 0.15s ease-in-out;
+    position: relative;
+    overflow: hidden;
+    /* The dopamine pulse */
+    animation: dopamine-pulse 1.5s infinite alternate;
+}
 
+/* The sweeping shine effect to draw the eye */
+.riot-ad-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transform: skewX(-25deg);
+    animation: ad-shine 3.5s infinite;
+}
+
+/* --- HOVER MASH/GLITCH STATE --- */
+.riot-ad-btn:hover {
+    transform: scale(1.05);
+    background: var(--dark-accent);
+    border-color: var(--riot-pink);
+    box-shadow: 0 0 20px var(--riot-pink), 
+                -4px 0 0 var(--riot-blue), 
+                 4px 0 0 var(--riot-pink);
+    text-shadow: 2px 2px var(--riot-blue), -2px -2px var(--riot-pink);
+}
+
+.riot-ad-btn:active {
+    transform: scale(0.95);
+}
+
+/* --- ACTIVE 2X BOOST STATE --- */
+.riot-ad-btn.active-boost {
+    background: var(--riot-pink);
+    color: var(--text);
+    border: 2px solid #fff;
+    box-shadow: 0 0 20px var(--riot-pink), 0 0 40px var(--riot-pink);
+    animation: rapid-fire 0.4s infinite alternate, glitch-skew 0.3s infinite linear alternate-reverse;
+    text-shadow: none;
+    pointer-events: none; /* Stops them from clicking it again */
+}
+
+/* --- ANIMATION KEYFRAMES --- */
+@keyframes dopamine-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 10px var(--riot-blue); }
+    100% { transform: scale(1.03); box-shadow: 0 0 20px var(--riot-blue), 0 0 10px var(--riot-pink); }
+}
+
+@keyframes ad-shine {
+    0% { left: -100%; }
+    20% { left: 200%; }
+    100% { left: 200%; }
+}
+
+@keyframes rapid-fire {
+    0% { transform: scale(1); opacity: 0.9; }
+    100% { transform: scale(1.06); opacity: 1; }
+}
+
+@keyframes glitch-skew {
+    0% { transform: skew(0deg); }
+    25% { transform: skew(-3deg); }
+    50% { transform: skew(3deg); }
+    75% { transform: skew(-1deg); }
+    100% { transform: skew(0deg); }
+}
 .screen {
     min-height: 100vh;
     display: flex;
