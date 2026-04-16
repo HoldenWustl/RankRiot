@@ -407,6 +407,7 @@ document.getElementById('play-btn').addEventListener('click', () => {
     // Add a satisfying click feel even to entry
     if(navigator.vibrate) navigator.vibrate([30, 10, 30]);
     showScreen('category');
+    document.getElementById('global-store-btn').style.display = 'flex';
     
     // START PRELOADING WHILE THEY CHOOSE A CATEGORY
     preloadCategoryImages(); 
@@ -416,6 +417,7 @@ document.getElementById('back-btn').addEventListener('click', () => {
     playSound(sfxMenu); // Snappy UI click
     if (activeListener) activeListener(); // Stop listening to Firebase
     showScreen('category');
+    document.getElementById('global-store-btn').style.display = 'flex';
     currentCategory = null;
     rankingList.innerHTML = ''; // Clear DOM
     
@@ -441,6 +443,7 @@ document.addEventListener('click', (e) => {
     showScreen('game');
     loadBattlefield(currentCategory);
     playWooshSound();
+    document.getElementById('global-store-btn').style.display = 'none';
 });
 
 // --- Game State ---
@@ -617,6 +620,7 @@ function createItemElement(id, name, imageUrl) {
     return div;
 }
 function handleMash(id, e) {
+    spawnEffect(e.clientX, e.clientY, equippedEffect, document.body);
     // 1. TRACK CONSECUTIVE CLICKS FOR "ON FIRE" MODE
     if (currentFocusId === id) {
         consecutiveClicks++;
@@ -3528,5 +3532,179 @@ onSnapshot(query(collection(db, "ticker_messages"), orderBy("timestamp", "desc")
 fireGlobalBanner(`📢 ${data.message} 📢`, true);
             }
         }
+    });
+});
+
+// ==========================================
+// STORE NAVIGATION LOGIC
+// ==========================================
+const storeBtn = document.getElementById('global-store-btn');
+const storeScreen = document.getElementById('store-screen');
+const storeBackBtn = document.getElementById('store-back-btn');
+const splashScreen = document.getElementById('splash-screen');
+const categoryScreen = document.getElementById('category-screen');
+
+let previousScreenBeforeStore = splashScreen; // Tracks where to go back to
+
+// Open the Store
+storeBtn.addEventListener('click', () => {
+    // Figure out which screen we are currently on
+    if (!splashScreen.classList.contains('hidden')) {
+        previousScreenBeforeStore = splashScreen;
+        splashScreen.classList.add('hidden');
+    } else if (!categoryScreen.classList.contains('hidden')) {
+        previousScreenBeforeStore = categoryScreen;
+        categoryScreen.classList.add('hidden');
+    }
+    
+    // Show store, hide the store button itself
+    storeScreen.classList.remove('hidden');
+    storeScreen.style.display = 'flex'; // Ensure flexbox layout works
+    storeBtn.style.display = 'none'; 
+});
+
+// Close the Store (Go Back)
+storeBackBtn.addEventListener('click', () => {
+    storeScreen.classList.add('hidden');
+    storeScreen.style.display = 'none';
+    
+    // Return to previous screen
+    previousScreenBeforeStore.classList.remove('hidden');
+    storeBtn.style.display = 'flex'; // Bring the store button back
+});
+
+// ==========================================
+// STORE & CLICK EFFECT LOGIC
+// ==========================================
+
+// Track what the user actually owns/has equipped
+let unlockedEffects = ['default'];
+let equippedEffect = 'default'; 
+
+// Track what the user is currently previewing in the store
+let previewEffect = 'default';
+
+const storeItems = document.querySelectorAll('.store-item');
+const testPad = document.getElementById('store-test-pad');
+
+// 1. Selecting an item to Preview
+storeItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+        // If they clicked the buy/equip button, ignore the preview selection
+        if (e.target.tagName.toLowerCase() === 'button') return;
+
+        // Reset all borders to their correct default colors
+        storeItems.forEach(i => {
+            const effectType = i.getAttribute('data-effect');
+            if (effectType === 'shockwave') {
+                i.style.borderColor = '#00e5ff'; // Restore Neon Cyan
+            } else if (effectType === 'comic') {
+                i.style.borderColor = '#ffcc00'; // Restore Comic Yellow
+            } else {
+                i.style.borderColor = '#333';    // Restore standard dark gray
+            }
+        });
+        
+        // Highlight the actively selected item in Riot Red
+        item.style.borderColor = '#ff0044';
+        previewEffect = item.getAttribute('data-effect');
+    });
+});
+
+// 2. Tapping the Test Pad
+testPad.addEventListener('click', (e) => {
+    // If default is selected, do nothing (no effect)
+    if (previewEffect === 'default') return;
+
+    // Get click coordinates relative to the test pad
+    const rect = testPad.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    spawnEffect(x, y, previewEffect, testPad);
+});
+
+// 3. The Function that spawns the visual
+// 3. The Function that spawns the visual
+function spawnEffect(x, y, effectType, container) {
+    const fx = document.createElement('div');
+    fx.style.left = `${x}px`;
+    fx.style.top = `${y}px`;
+
+    // Standard Emoji Effects
+    if (effectType === 'fire' || effectType === 'toxic') {
+        fx.classList.add('click-fx');
+        if (effectType === 'fire') fx.innerText = '🔥';
+        if (effectType === 'toxic') {
+            fx.innerText = '☣️';
+            fx.style.color = '#00ff00';
+        }
+    } 
+    // Premium Effect: Shockwave
+    else if (effectType === 'shockwave') {
+        fx.classList.add('fx-shockwave');
+    } 
+    // Premium Effect: Comic Strike
+    else if (effectType === 'comic') {
+        fx.classList.add('fx-comic');
+        
+        // Pick a random word
+        const words = ['BAM!', 'POW!', 'SMASH!', 'WHACK!', 'BOOM!'];
+        const word = words[Math.floor(Math.random() * words.length)];
+        
+        // Give it a random tilt between -25 and +25 degrees
+        const tilt = Math.floor(Math.random() * 50) - 25;
+        
+        // We wrap the word in a span to apply the tilt without messing up the CSS animation
+        fx.innerHTML = `<span style="display: block; transform: rotate(${tilt}deg);">${word}</span>`;
+    }
+
+    container.appendChild(fx);
+
+    // Clean up DOM after animation finishes
+    setTimeout(() => {
+        if(fx.parentNode === container) fx.remove();
+    }, 600);
+}
+
+// 4. Buy & Equip Logic
+document.querySelectorAll('.store-item button').forEach(btn => {
+    // Make sure all buttons can be clicked initially (except the one already equipped)
+    if (btn.innerText !== 'EQUIPPED') {
+        btn.style.pointerEvents = 'auto';
+    }
+
+    btn.addEventListener('click', (e) => {
+        const item = e.target.closest('.store-item');
+        const effectId = item.getAttribute('data-effect');
+        
+        // 1. If they don't own it yet, process the "buy"
+        if (!unlockedEffects.includes(effectId)) {
+            alert("Normally this triggers Apple/Google Pay. We will unlock it for now!");
+            unlockedEffects.push(effectId);
+        }
+        
+        // 2. Equip the item
+        equippedEffect = effectId;
+        
+        // 3. Reset ALL buttons in the store to "EQUIP" if they own them
+        document.querySelectorAll('.store-item').forEach(storeItem => {
+            const thisEffectId = storeItem.getAttribute('data-effect');
+            const thisBtn = storeItem.querySelector('button');
+            
+            if (unlockedEffects.includes(thisEffectId)) {
+                thisBtn.innerText = 'EQUIP';
+                thisBtn.style.background = '#333';
+                thisBtn.style.color = 'white';
+                thisBtn.style.pointerEvents = 'auto'; // Make it clickable again
+                thisBtn.style.cursor = 'pointer';
+            }
+        });
+        
+        // 4. Highlight the newly equipped button
+        e.target.innerText = 'EQUIPPED';
+        e.target.style.background = 'transparent';
+        e.target.style.color = '#ff0044';
+        e.target.style.pointerEvents = 'none'; // Can't equip what's already equipped
     });
 });
