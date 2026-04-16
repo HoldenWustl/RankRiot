@@ -1,0 +1,27 @@
+workflows:
+  ios-workflow:
+    name: RankRiot iOS Build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      node: latest
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install dependencies
+        script: | 
+          npm install
+      - name: Capacitor Sync
+        script: | 
+          npx cap sync ios
+      - name: Build iOS project
+        script: | 
+          # This compiles the native code inside the /ios folder
+          cd ios/App
+          xcodebuild build -scheme App -destination 'generic/platform=iOS'
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - hweinberg123@gmail.com # Change this to your email
