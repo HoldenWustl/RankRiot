@@ -1,5 +1,9 @@
 {
   "appId": "com.holdenweinberg.rankriot",
   "appName": "RankRiot",
-  "webDir": "www"
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "ios": {
+    "developmentTeam": "HNX87Y9L7A"
+  }
 }
