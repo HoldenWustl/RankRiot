@@ -21,7 +21,7 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
-          # We use the bundle ID directly to ensure no environment variable mishaps
+          # We use the literal bundle ID and the --create flag to force a new one
           app-store-connect fetch-signing-files "com.holdenweinberg.rankriot" --type IOS_APP_STORE --create
           keychain add-certificates
       - name: Build iOS IPA
