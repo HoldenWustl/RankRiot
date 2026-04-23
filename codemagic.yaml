@@ -3,25 +3,36 @@ workflows:
     name: RankRiot iOS Build
     max_build_duration: 60
     instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: RankRiot Key # This MUST match the name you gave the integration in Step 1
     environment:
       node: latest
       xcode: latest
       cocoapods: default
+      vars:
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+        APP_ID: "com.holdenweinberg.rankriot"
     scripts:
       - name: Install dependencies
-        script: | 
-          npm install
+        script: npm install
       - name: Capacitor Sync
-        script: | 
-          npx cap sync ios
-      - name: Build iOS project
-        script: | 
-          # This compiles the native code inside the /ios folder
-          cd ios/App
-          xcodebuild build -scheme App -destination 'generic/platform=iOS'
+        script: npx cap sync ios
+      - name: Set up code signing
+        script: |
+          # This tells Codemagic to fetch your certificates from Apple automatically
+          keychain initialize
+          app-store-connect fetch-signing-files "$APP_ID" --type IOS_APP_STORE --create
+          keychain add-certificates
+      - name: Build iOS IPA
+        script: |
+          # This creates the actual .ipa file for the App Store
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
       email:
         recipients:
-          - hweinberg123@gmail.com # Change this to your email
+          - hweinberg123@gmail.com
