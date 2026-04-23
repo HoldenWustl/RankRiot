@@ -20,9 +20,9 @@ workflows:
         script: npx cap sync ios
       - name: Set up code signing
         script: |
-          # This tells Codemagic to fetch your certificates from Apple automatically
           keychain initialize
-          app-store-connect fetch-signing-files "$APP_ID" --type IOS_APP_STORE --create
+          # We use the bundle ID directly to ensure no environment variable mishaps
+          app-store-connect fetch-signing-files "com.holdenweinberg.rankriot" --type IOS_APP_STORE --create
           keychain add-certificates
       - name: Build iOS IPA
         script: |
