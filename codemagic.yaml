@@ -4,12 +4,11 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
     integrations:
-      app_store_connect: RankRiot Key # This MUST match the name you gave the integration
+      app_store_connect: RankRiot Key 
     environment:
       node: latest
       xcode: latest
       cocoapods: default
-      # The ios_signing block is REMOVED so it doesn't conflict
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
@@ -19,13 +18,23 @@ workflows:
         script: npm install
       - name: Capacitor Sync
         script: npx cap sync ios
+      - name: Debug iOS Folder (Let's see what is actually here)
+        script: |
+          echo "--- ROOT FOLDER ---"
+          ls -la
+          echo "--- IOS FOLDER ---"
+          ls -la ios/ || echo "Wait, the ios folder is missing?!"
+          echo "--- IOS/APP FOLDER ---"
+          ls -la ios/App/ || echo "Wait, the ios/App folder is missing?!"
+      - name: Force Generate Xcode Workspace
+        script: |
+          cd ios/App
+          pod install --repo-update
       - name: Set up code signing
         script: |
           keychain initialize
-          # This forces Apple to CREATE the missing profile and certificate
           app-store-connect fetch-signing-files "$APP_ID" --type IOS_APP_STORE --create
           keychain add-certificates
-          # This tells Xcode to actually use the profile we just created
           xcode-project use-profiles
       - name: Build iOS IPA
         script: |
