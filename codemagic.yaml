@@ -8,13 +8,10 @@ workflows:
     environment:
       node: latest
       xcode: latest
-      # We bring back ios_signing because the profile now exists on Apple!
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.holdenweinberg.rankriot
       vars:
         XCODE_PROJECT: "ios/App/App.xcodeproj" 
         XCODE_SCHEME: "App"
+        APP_ID: "com.holdenweinberg.rankriot"
     scripts:
       - name: Install dependencies
         script: |
@@ -22,6 +19,18 @@ workflows:
           npm install @capacitor/ios
       - name: Capacitor Sync
         script: npx cap sync ios
+      - name: Set up code signing & Force Create Profile
+        script: |
+          # 1. Force the Xcode project to use your exact Bundle ID so the profile maps correctly
+          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = $APP_ID;/g" "$XCODE_PROJECT/project.pbxproj"
+          
+          # 2. Fetch and forcefully create the App Store profile on Apple's servers
+          keychain initialize
+          app-store-connect fetch-signing-files "$APP_ID" --type IOS_APP_STORE --create
+          keychain add-certificates
+          
+          # 3. Inject the keys into the newly updated Xcode project
+          xcode-project use-profiles --project "$XCODE_PROJECT"
       - name: Build iOS IPA
         script: |
           xcode-project build-ipa \
