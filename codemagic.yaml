@@ -15,13 +15,18 @@ workflows:
         APP_ID: "com.holdenweinberg.rankriot"
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: |
+          npm install
+          npm install @capacitor/ios # Guarantee the iOS package is present
       - name: Rebuild iOS Folder from Scratch
         script: |
-          # 1. Delete the broken/incomplete ios folder from Git
           rm -rf ios
-          # 2. Let Capacitor generate a brand new, perfect ios folder with the Podfile and Workspace
           npx cap add ios
+      - name: Generate Xcode Workspace (CocoaPods)
+        script: |
+          # This is the magic step that actually builds App.xcworkspace
+          cd ios/App
+          pod install --repo-update
       - name: Set up code signing
         script: |
           keychain initialize
