@@ -8,25 +8,18 @@ workflows:
     environment:
       node: latest
       xcode: latest
-      cocoapods: default
       vars:
-        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        # We changed this from XCODE_WORKSPACE to XCODE_PROJECT
+        XCODE_PROJECT: "ios/App/App.xcodeproj" 
         XCODE_SCHEME: "App"
         APP_ID: "com.holdenweinberg.rankriot"
     scripts:
       - name: Install dependencies
         script: |
           npm install
-          npm install @capacitor/ios # Guarantee the iOS package is present
-      - name: Rebuild iOS Folder from Scratch
-        script: |
-          rm -rf ios
-          npx cap add ios
-      - name: Generate Xcode Workspace (CocoaPods)
-        script: |
-          # This is the magic step that actually builds App.xcworkspace
-          cd ios/App
-          pod install --repo-update
+          npm install @capacitor/ios
+      - name: Capacitor Sync
+        script: npx cap sync ios
       - name: Set up code signing
         script: |
           keychain initialize
@@ -35,8 +28,9 @@ workflows:
           xcode-project use-profiles
       - name: Build iOS IPA
         script: |
+          # And we use --project instead of --workspace here
           xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
+            --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
