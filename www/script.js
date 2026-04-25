@@ -925,7 +925,7 @@ function updateCombo() {
         comboBarFill.style.background = getCssVar('--riot-blue');
         
     } else {
-        // BASE STATE
+        // BASE STATE!
         multiplier = 1;
         comboText.innerText = "1x SPAM";
         comboText.style.color = getCssVar('--text'); 
