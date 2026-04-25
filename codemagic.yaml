@@ -9,7 +9,6 @@ workflows:
       node: latest
       xcode: latest
       vars:
-        # We changed this from XCODE_WORKSPACE to XCODE_PROJECT
         XCODE_PROJECT: "ios/App/App.xcodeproj" 
         XCODE_SCHEME: "App"
         APP_ID: "com.holdenweinberg.rankriot"
@@ -25,10 +24,10 @@ workflows:
           keychain initialize
           app-store-connect fetch-signing-files "$APP_ID" --type IOS_APP_STORE --create
           keychain add-certificates
-          xcode-project use-profiles
+          # IMPORTANT: We added the --project flag here so it knows where to inject the profile!
+          xcode-project use-profiles --project "$XCODE_PROJECT"
       - name: Build iOS IPA
         script: |
-          # And we use --project instead of --workspace here
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
