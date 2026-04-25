@@ -4,14 +4,12 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
     integrations:
-      app_store_connect: RankRiot Key # This MUST match the name you gave the integration in Step 1
+      app_store_connect: RankRiot Key # This MUST match the name you gave the integration
     environment:
       node: latest
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.holdenweinberg.rankriot
+      # The ios_signing block is REMOVED so it doesn't conflict
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
@@ -21,10 +19,16 @@ workflows:
         script: npm install
       - name: Capacitor Sync
         script: npx cap sync ios
+      - name: Set up code signing
+        script: |
+          keychain initialize
+          # This forces Apple to CREATE the missing profile and certificate
+          app-store-connect fetch-signing-files "$APP_ID" --type IOS_APP_STORE --create
+          keychain add-certificates
+          # This tells Xcode to actually use the profile we just created
+          xcode-project use-profiles
       - name: Build iOS IPA
         script: |
-          # This creates the actual .ipa file for the App Store
-          # Codemagic's ios_signing block handles the certificates automatically!
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME"
