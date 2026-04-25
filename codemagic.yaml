@@ -34,3 +34,6 @@ workflows:
       email:
         recipients:
           - hweinberg123@gmail.com
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
