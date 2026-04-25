@@ -16,20 +16,12 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install
-      - name: Capacitor Sync
-        script: npx cap sync ios
-      - name: Debug iOS Folder (Let's see what is actually here)
+      - name: Rebuild iOS Folder from Scratch
         script: |
-          echo "--- ROOT FOLDER ---"
-          ls -la
-          echo "--- IOS FOLDER ---"
-          ls -la ios/ || echo "Wait, the ios folder is missing?!"
-          echo "--- IOS/APP FOLDER ---"
-          ls -la ios/App/ || echo "Wait, the ios/App folder is missing?!"
-      - name: Force Generate Xcode Workspace
-        script: |
-          cd ios/App
-          pod install --repo-update
+          # 1. Delete the broken/incomplete ios folder from Git
+          rm -rf ios
+          # 2. Let Capacitor generate a brand new, perfect ios folder with the Podfile and Workspace
+          npx cap add ios
       - name: Set up code signing
         script: |
           keychain initialize
