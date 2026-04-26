@@ -398,25 +398,65 @@ function unlockTickerButton() {
     if (typeof playPopSound === 'function') playPopSound(10);
     if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
 }
-function playPopSound(multiplier) {
+function playPopSound(multiplier, effectType = 'default') {
     if (audioCtx.state === 'suspended') audioCtx.resume();
+    
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     
     osc.connect(gain);
     gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+
+    // --- Sound Design Logic ---
+    switch(effectType) {
+        case 'fire':
+            // Fast, aggressive "Sizzle-Pop"
+            osc.type = 'triangle'; 
+            osc.frequency.setValueAtTime(400 + (multiplier * 10), now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+            gain.gain.setValueAtTime(0.2, now);
+            break;
+
+        case 'toxic':
+            // "Liquid/Bubble" - Pitch slides UP instead of down
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(500 + (multiplier * 5), now + 0.15);
+            gain.gain.setValueAtTime(0.15, now);
+            break;
+
+        case 'shockwave':
+            // "Heavy Thud" - Low frequency, high initial punch
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(120, now);
+            osc.frequency.exponentialRampToValueAtTime(20, now + 0.2);
+            gain.gain.setValueAtTime(0.4, now); // Louder for impact
+            break;
+
+        case 'comic':
+            // "8-Bit Punch" - Square wave sounds like a retro game
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now); 
+            break;
+
+        default:
+            // Your original Pop logic
+            osc.type = 'sine';
+            const baseFreq = multiplier >= 10 ? 800 : (multiplier > 1 ? 500 : 300);
+            osc.frequency.setValueAtTime(baseFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+    }
+
+    // Standard fast decay (Dopamine "Click" feel)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + (effectType === 'shockwave' ? 0.2 : 0.1));
     
-    // Fever mode = higher pitch pop!
-    const baseFreq = multiplier >= 10 ? 800 : (multiplier > 1 ? 500 : 300);
-    
-    osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
-    
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-    
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.1);
+    osc.start(now);
+    osc.stop(now + (effectType === 'shockwave' ? 0.2 : 0.1));
 }
 
 function showScreen(screenName) {
@@ -548,18 +588,6 @@ function loadBattlefield(categoryName) {
         // 1. Sort by votes (descending)
         updatedItems.sort((a, b) => b.votes - a.votes);
 
-        // --- SOUND LOGIC: 2. Extract the new winning order ---
-        const newOrder = updatedItems.map(item => item.id);
-
-        // --- SOUND LOGIC: 3. Check for an overtake! ---
-        // If we have a previous order, and the new order is different, someone got passed!
-        if (previousOrder.length > 0 && previousOrder.join(',') !== newOrder.join(',')) {
-            playSound(sfxOvertake); // Trigger the Whoosh/Level up sound!
-            if(navigator.vibrate) navigator.vibrate([50, 100, 50]); // Extra phone rumble
-        }
-
-        // --- SOUND LOGIC: 4. Save this new order for the next time Firebase updates ---
-        previousOrder = newOrder;
         
         // 2. Map rank #1 to the top item's ID so we know who is winning
         if (updatedItems[0]) {
@@ -755,7 +783,7 @@ function handleMash(id, e) {
     // 3. VISUAL JUICE
     // Show the actual points gained (+2, +4, +10, etc.)
     createFloatingText(e.clientX, e.clientY, `+${clickPower}`);
-    playPopSound(clickPower);
+    playPopSound(clickPower, equippedEffect); // Play different sounds based on the effect type and click power
 
     // --- ULTRA-SMOOTH TRACE ANIMATION (JS-DRIVEN) ---
     const circle = itemEl.querySelector('.mash-trace-svg circle');
@@ -3176,7 +3204,7 @@ function triggerOvertakeEffect(winnerName, loserName) {
     const ribbon = wrapper.querySelector('.overtake-ribbon');
 
     if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
-
+    sfxOvertake.play();
     let autoRemoveTimer = null;
     let closing = false;
     const baseTransform = 'translate(-50%, -50%)';
@@ -3705,6 +3733,7 @@ testPad.addEventListener('click', (e) => {
     const y = e.clientY - rect.top;
 
     spawnEffect(x, y, previewEffect, testPad);
+    playPopSound(1, previewEffect);
 });
 
 // 3. The Function that spawns the visual
@@ -3791,3 +3820,49 @@ document.querySelectorAll('.store-item button').forEach(btn => {
         e.target.style.pointerEvents = 'none'; // Can't equip what's already equipped
     });
 });
+
+// 1. Setup the Background Music
+const bgm = new Audio('assets/bgmusic.mp3'); // UPDATE THIS PATH!
+bgm.loop = true; // Crucial: loops forever
+bgm.volume = 0.2; // Set to 60% so it doesn't drown out your tap SFX
+
+// 2. The Mute Button Logic
+const muteBtn = document.getElementById('mute-btn');
+let isMuted = false;
+
+muteBtn.addEventListener('click', (e) => {
+    // Stop the click from triggering the "first tap" logic underneath
+    e.stopPropagation(); 
+    
+    isMuted = !isMuted;
+    bgm.muted = isMuted;
+    
+    // Toggle the icon visually
+    if (isMuted) {
+        muteBtn.innerText = '🔇';
+        muteBtn.style.borderColor = '#555';
+        muteBtn.style.boxShadow = 'none'; // Kill the neon glow when muted
+    } else {
+        muteBtn.innerText = '🔊';
+        muteBtn.style.borderColor = '#00e5ff';
+        muteBtn.style.boxShadow = '0 0 10px #00e5ff'; // Turn the neon back on
+        
+        // If they unmuted but the audio never started, start it now
+        if (bgm.paused) {
+            bgm.play().catch(err => console.log("Audio play blocked by browser:", err));
+        }
+    }
+});
+
+// 3. The "First Tap" Autoplay Unlocker
+// This listens for the very first time the user touches the screen, starts the music, then destroys itself.
+const startAudio = () => {
+    if (!isMuted && bgm.paused) {
+        bgm.play().catch(err => console.log("Waiting for user interaction:", err));
+    }
+    // Remove the listener so it doesn't try to fire this command on every single mash
+    document.removeEventListener('pointerdown', startAudio);
+};
+
+// Listen for a touch anywhere on the screen
+document.addEventListener('pointerdown', startAudio);

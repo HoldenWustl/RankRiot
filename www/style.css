@@ -266,7 +266,158 @@ h1.title {
     display: flex; flex-direction: column; align-items: center;
 }
 
-#back-btn { position: absolute; left: 15px; top: 20px; background: transparent; color: #555; border: none; font-weight: bold; }
+#back-btn {
+    /* 1. Placement & Safe Area constraints */
+    position: absolute;
+    left: 15px;
+    /* Uses the device's notch/island height, defaults to 20px if not on mobile */
+    top: calc(env(safe-area-inset-top, 20px) + 10px); 
+    z-index: 1000; /* Forces it to the very front so nothing blocks the click */
+
+    /* 2. Massive Hitbox */
+    padding: 12px 24px;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* 3. The Dopamine Visuals */
+    background: rgba(17, 17, 26, 0.8); /* Slightly transparent dark-accent */
+    backdrop-filter: blur(4px); /* Frosts the background behind it */
+    color: var(--text);
+    border: 2px solid var(--riot-pink);
+    border-radius: 12px;
+    
+    font-weight: 900;
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    
+    /* Neon Pink Glow */
+    box-shadow: 0 0 10px rgba(255, 0, 85, 0.4), 
+                inset 0 0 5px rgba(255, 0, 85, 0.2);
+
+    /* Smooth transitions for the tap effect */
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    
+    /* Prevents the text from being accidentally highlighted when tapping fast */
+    user-select: none; 
+    -webkit-tap-highlight-color: transparent; 
+}
+
+/* 4. The physical reaction when the user taps the screen */
+#back-btn:active {
+    transform: scale(0.90); /* Punches inward */
+    background: var(--riot-pink); /* Fills with pure color */
+    color: var(--bg); /* Inverts the text color */
+    /* Explodes the glow outward */
+    box-shadow: 0 0 25px var(--riot-pink), 
+                inset 0 0 10px rgba(255, 255, 255, 0.5);
+}
+/* -------------------------------------------
+   1. BASE ITEM: The Setup
+------------------------------------------- */
+.list-item {
+    position: relative;
+    background: var(--dark-accent, #11111a);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    z-index: 1;
+    /* Adds a tiny idle float so the list never feels completely dead */
+    animation: idle-float 3s infinite ease-in-out;
+}
+
+@keyframes idle-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+}
+
+.list-item > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* -------------------------------------------
+   2. STANDARD ITEM: The "Whip" Glint
+------------------------------------------- */
+/* Instead of a slow 4-second sweep, this whips across the screen in 0.3s and pauses */
+@keyframes whip-glint {
+    0% { transform: translateX(-150%) skewX(-45deg); opacity: 1; }
+    15% { transform: translateX(250%) skewX(-45deg); opacity: 1; }
+    100% { transform: translateX(250%) skewX(-45deg); opacity: 0; } 
+}
+
+.list-item::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 30%; height: 100%;
+    /* Much brighter, thicker flash */
+    background: linear-gradient(
+        to right, 
+        rgba(255, 255, 255, 0) 0%, 
+        rgba(255, 255, 255, 0.4) 50%, 
+        rgba(255, 255, 255, 0) 100%
+    );
+    animation: whip-glint 2s infinite ease-out;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* -------------------------------------------
+   3. TOP 3: Pure Chaos & Neon
+------------------------------------------- */
+.list-item.flash-gold { --glow-color: #ffaa00; --core-color: #ffe699; }
+.list-item.flash-silver { --glow-color: var(--riot-blue); --core-color: #ccf9ff; }
+.list-item.flash-bronze { --glow-color: var(--riot-pink); --core-color: #ffb3cc; }
+
+/* 1. The items physically pump like a heartbeat */
+@keyframes neon-throb {
+    0% { transform: scale(1); box-shadow: 0 0 10px var(--glow-color); }
+    50% { transform: scale(1.03); box-shadow: 0 0 30px var(--glow-color), inset 0 0 15px var(--glow-color); }
+    100% { transform: scale(1); box-shadow: 0 0 10px var(--glow-color); }
+}
+
+.list-item.flash-gold,
+.list-item.flash-silver,
+.list-item.flash-bronze {
+    animation: neon-throb 0.6s infinite alternate cubic-bezier(0.25, 0.1, 0.25, 1);
+    /* Remove the idle float so it doesn't conflict with the throb */
+    animation-name: neon-throb; 
+}
+
+/* 2. Hyper-fast border spin (0.4s instead of 2.5s) */
+@keyframes hyper-spin {
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.list-item.flash-gold::before,
+.list-item.flash-silver::before,
+.list-item.flash-bronze::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 250%; height: 250%; 
+    /* Added a white-hot core to the front of the spinning tail */
+    background: conic-gradient(from 0deg, transparent 50%, var(--glow-color) 90%, var(--core-color) 100%);
+    transform: translate(-50%, -50%) rotate(0deg);
+    animation: hyper-spin 0.4s linear infinite; /* Blistering speed */
+    z-index: 0;
+}
+
+.list-item.flash-gold::after,
+.list-item.flash-silver::after,
+.list-item.flash-bronze::after {
+    content: '';
+    position: absolute;
+    inset: 3px; /* Slightly thicker border so the fast spin is super visible */
+    background: var(--dark-accent);
+    border-radius: 13px;
+    z-index: 1;
+}
 #current-list-title { margin: 0 0 10px 0; font-family: 'Anton', sans-serif; font-size: 1.8rem; letter-spacing: 1px; color: white;}
 /* ==========================================
    👑 YESTERDAY'S WINNERS (SPLASH SCREEN)
