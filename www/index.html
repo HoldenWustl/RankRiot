@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
     <title>RankRiot - SPAM IT</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;700;900&display=swap"
@@ -47,8 +46,10 @@
                 <span class="share-icon">🔗</span> CHALLENGE FRIENDS
             </button>
         </div>
-        <div class="legal-disclaimer" style="font-size: 0.65rem; opacity: 0.5; margin-top: 30px; text-align: center; max-width: 80%; line-height: 1.4; font-family: sans-serif;">
-            RankRiot is for entertainment and satirical purposes only. All names, characters, and brands are trademarks of their respective owners. Not affiliated with or endorsed by any featured entities.
+        <div class="legal-disclaimer"
+            style="font-size: 0.65rem; opacity: 0.5; margin-top: 30px; text-align: center; max-width: 80%; line-height: 1.4; font-family: sans-serif;">
+            RankRiot is for entertainment and satirical purposes only. All names, characters, and brands are trademarks
+            of their respective owners. Not affiliated with or endorsed by any featured entities.
         </div>
 
     </div>
@@ -277,12 +278,12 @@
         <div id="global-ticker-container" class="hidden">
             <div id="global-ticker-text">🚨 TRUMP JUST CRUSHED BIDEN! 🚨</div>
         </div>
-        
+
         <div id="sticky-header">
             <div id="double-click-ad-btn" class="riot-ad-btn">
-    <span class="ad-icon">📺</span>
-    <span id="ad-text">2X VOTES</span>
-</div>
+                <span class="ad-icon">📺</span>
+                <span id="ad-text">2X VOTES</span>
+            </div>
             <button id="back-btn">BACK</button>
             <h2 id="current-list-title">PRESIDENTS</h2>
             <div id="game-est-timer"
@@ -333,128 +334,151 @@
                 📸 SHARE THIS BEEF 📸
             </button>
         </div>
-       
+
     </div>
     <button id="open-ticker-btn"
-    style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 99; background: #ff0044; color: white; border: 2px solid white; border-radius: 50%; width: 60px; height: 60px; font-size: 1.5rem; box-shadow: 0 0 15px #ff0044; cursor: pointer;">
-    📣
-</button>
+        style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 99; background: #ff0044; color: white; border: 2px solid white; border-radius: 50%; width: 60px; height: 60px; font-size: 1.5rem; box-shadow: 0 0 15px #ff0044; cursor: pointer;">
+        📣
+    </button>
 
-        <div id="ticker-modal"
-            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-            <div
-                style="background: #111; border: 2px solid #ff0044; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; color: white;">
-                <h3 style="margin-top: 0; color: #ff0044; text-transform: uppercase;">Broadcast to the Riot</h3>
+    <div id="ticker-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div
+            style="background: #111; border: 2px solid #ff0044; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; color: white;">
+            <h3 style="margin-top: 0; color: #ff0044; text-transform: uppercase;">Broadcast to the Riot</h3>
 
-                <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px;">
-                    <select id="madlib-subject"
-                        style="padding: 10px; background: #222; color: white; border: 1px solid #444; border-radius: 6px;">
-                        <option value="Option A">Option A</option>
-                        <option value="Option B">Option B</option>
-                    </select>
+            <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px;">
+                <select id="madlib-subject"
+                    style="padding: 10px; background: #222; color: white; border: 1px solid #444; border-radius: 6px;">
+                    <option value="Option A">Option A</option>
+                    <option value="Option B">Option B</option>
+                </select>
 
-                    <select id="madlib-action"
-                        style="padding: 10px; background: #222; color: white; border: 1px solid #444; border-radius: 6px;">
-                        <option value="ABSOLUTELY CLEARS">ABSOLUTELY CLEARS</option>
-                        <option value="IS GETTING DESTROYED BY">IS GETTING DESTROYED BY</option>
-                        
-                        <option value="EASILY DOGWALKS">EASILY DOGWALKS</option>
-                        <option value="IS COMPLETELY WASHED COMPARED TO">IS COMPLETELY WASHED COMPARED TO</option>
-                        <option value="WIPES THE FLOOR WITH">WIPES THE FLOOR WITH</option>
-                        <option value="IS A TOTAL FRAUD NEXT TO">IS A TOTAL FRAUD NEXT TO</option>
-                        <option value="WOULD LITERALLY FOLD TO">WOULD LITERALLY FOLD TO</option>
-                        <option value="IS OVERRATED! VOTE FOR">IS OVERRATED! VOTE FOR</option>
-                        
-                        <option value="IS THE TRUE GOAT OVER">IS THE TRUE GOAT OVER</option>
-                        <option value="DESERVES WAY MORE RESPECT THAN">DESERVES WAY MORE RESPECT THAN</option>
-                        <option value="LITERALLY OWNS">LITERALLY OWNS</option>
-                        
-                        <option value="NEEDS YOUR VOTES TO BEAT">NEEDS YOUR VOTES TO BEAT</option>
-                    </select>
+                <select id="madlib-action"
+                    style="padding: 10px; background: #222; color: white; border: 1px solid #444; border-radius: 6px;">
+                    <option value="ABSOLUTELY CLEARS">ABSOLUTELY CLEARS</option>
+                    <option value="IS GETTING DESTROYED BY">IS GETTING DESTROYED BY</option>
 
-                    <select id="madlib-target"
-                        style="padding: 10px; background: #222; color: white; border: 1px solid #444; border-radius: 6px;">
-                        <option value="Option B">Option B</option>
-                        <option value="Option A">Option A</option>
-                    </select>
-                </div>
+                    <option value="EASILY DOGWALKS">EASILY DOGWALKS</option>
+                    <option value="IS COMPLETELY WASHED COMPARED TO">IS COMPLETELY WASHED COMPARED TO</option>
+                    <option value="WIPES THE FLOOR WITH">WIPES THE FLOOR WITH</option>
+                    <option value="IS A TOTAL FRAUD NEXT TO">IS A TOTAL FRAUD NEXT TO</option>
+                    <option value="WOULD LITERALLY FOLD TO">WOULD LITERALLY FOLD TO</option>
+                    <option value="IS OVERRATED! VOTE FOR">IS OVERRATED! VOTE FOR</option>
 
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button id="close-ticker-btn"
-                        style="padding: 10px 20px; background: #444; border: none; color: white; border-radius: 6px; cursor: pointer;">CANCEL</button>
-                    <button id="send-ticker-btn"
-                        style="padding: 10px 20px; background: #ff0044; border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer;">SEND
-                        IT</button>
-                </div>
+                    <option value="IS THE TRUE GOAT OVER">IS THE TRUE GOAT OVER</option>
+                    <option value="DESERVES WAY MORE RESPECT THAN">DESERVES WAY MORE RESPECT THAN</option>
+                    <option value="LITERALLY OWNS">LITERALLY OWNS</option>
+
+                    <option value="NEEDS YOUR VOTES TO BEAT">NEEDS YOUR VOTES TO BEAT</option>
+                </select>
+
+                <select id="madlib-target"
+                    style="padding: 10px; background: #222; color: white; border: 1px solid #444; border-radius: 6px;">
+                    <option value="Option B">Option B</option>
+                    <option value="Option A">Option A</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="close-ticker-btn"
+                    style="padding: 10px 20px; background: #444; border: none; color: white; border-radius: 6px; cursor: pointer;">CANCEL</button>
+                <button id="send-ticker-btn"
+                    style="padding: 10px 20px; background: #ff0044; border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer;">SEND
+                    IT</button>
             </div>
         </div>
+    </div>
 
-        <button id="global-store-btn" style="position: fixed; top: 20px; right: 20px; z-index: 50; background: #111; border: 2px solid #ff0044; color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 0 10px #ff0044; display: flex; justify-content: center; align-items: center;">
+   <button id="global-store-btn" style="position: fixed; top: calc(env(safe-area-inset-top, 20px) + 15px); right: 20px; z-index: 105; background: #111; border: 2px solid #ff0044; color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 0 10px #ff0044; display: flex; justify-content: center; align-items: center;">
     🛒
 </button>
-<button id="mute-btn" style="position: fixed; top: 20px; right: 80px; z-index: 50; background: #111; border: 2px solid #00e5ff; color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 0 10px #00e5ff; display: flex; justify-content: center; align-items: center;">
+
+<button id="mute-btn" style="position: fixed; top: calc(env(safe-area-inset-top, 20px) + 15px); right: 80px; z-index: 105; background: #111; border: 2px solid #00e5ff; color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 0 10px #00e5ff; display: flex; justify-content: center; align-items: center;">
     🔊
 </button>
 
-<div id="store-screen" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; z-index: 200; overflow-y: auto; padding: 20px; box-sizing: border-box; flex-direction: column;">
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-top: 10px;">
-        <button id="store-back-btn" style="background: transparent; border: none; color: #ff0044; font-size: 2rem; cursor: pointer;">←</button>
-        <h1 class="glitch-text" style="margin: 0; font-size: 2.2rem; text-transform: uppercase;">The Armory</h1>
-        <div style="width: 30px;"></div> </div>
-    
-    <div style="text-align: center; width: 100%; max-width: 400px; margin: 0 auto;">
-        <p style="color: #888; font-family: sans-serif; margin-bottom: 20px;">Customize your riot.</p>
-        
-        <div id="store-test-pad" style="width: 100%; height: 120px; background: #1a1a1a; border: 2px dashed #444; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; cursor: crosshair;">
-            <span style="color: #555; pointer-events: none; font-weight: bold; letter-spacing: 2px;">TAP HERE TO TEST</span>
+    <div id="store-screen" class="hidden"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; z-index: 200; overflow-y: auto; padding: 20px; box-sizing: border-box; flex-direction: column;">
+
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-top: 10px;">
+            <button id="store-back-btn"
+                style="background: transparent; border: none; color: #ff0044; font-size: 2rem; cursor: pointer;">←</button>
+            <h1 class="glitch-text" style="margin: 0; font-size: 2.2rem; text-transform: uppercase;">The Armory</h1>
+            <div style="width: 30px;"></div>
         </div>
 
-        <div class="store-item" data-effect="default" style="background: #111; border: 2px solid #ff0044; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-            <div style="text-align: left; pointer-events: none;">
-                <h3 style="margin: 0; color: white; text-transform: uppercase;">Classic Tap</h3>
-                <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem; font-family: sans-serif;">Nothing but damage.</p>
+        <div style="text-align: center; width: 100%; max-width: 400px; margin: 0 auto;">
+            <p style="color: #888; font-family: sans-serif; margin-bottom: 20px;">Customize your riot.</p>
+
+            <div id="store-test-pad"
+                style="width: 100%; height: 120px; background: #1a1a1a; border: 2px dashed #444; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; cursor: crosshair;">
+                <span style="color: #555; pointer-events: none; font-weight: bold; letter-spacing: 2px;">TAP HERE TO
+                    TEST</span>
             </div>
-           <button class="store-equip-btn" style="background: transparent; border: none; color: #ff0044; padding: 10px 15px; border-radius: 6px; font-weight: bold; pointer-events: none;">EQUIPPED</button>
+
+            <div class="store-item" data-effect="default"
+                style="background: #111; border: 2px solid #ff0044; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="text-align: left; pointer-events: none;">
+                    <h3 style="margin: 0; color: white; text-transform: uppercase;">Classic Tap</h3>
+                    <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem; font-family: sans-serif;">Nothing but
+                        damage.</p>
+                </div>
+                <button class="store-equip-btn"
+                    style="background: transparent; border: none; color: #ff0044; padding: 10px 15px; border-radius: 6px; font-weight: bold; pointer-events: none;">EQUIPPED</button>
+            </div>
+
+            <div class="store-item" data-effect="fire"
+                style="background: #111; border: 2px solid #333; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="text-align: left; pointer-events: none;">
+                    <h3 style="margin: 0; color: white; text-transform: uppercase;">Hellfire</h3>
+                    <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem; font-family: sans-serif;">Leave scorch
+                        marks.</p>
+                </div>
+                <button class="store-buy-btn"
+                    style="background: #ff0044; border: none; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">$0.99</button>
+            </div>
+
+            <div class="store-item" data-effect="toxic"
+                style="background: #111; border: 2px solid #333; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="text-align: left; pointer-events: none;">
+                    <h3 style="margin: 0; color: white; text-transform: uppercase;">Toxic Spill</h3>
+                    <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem; font-family: sans-serif;">Radioactive
+                        taps.</p>
+                </div>
+                <button class="store-buy-btn"
+                    style="background: #ff0044; border: none; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">$0.99</button>
+            </div>
+            <div class="store-item" data-effect="shockwave"
+                style="background: #111; border: 2px solid #00e5ff; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="text-align: left; pointer-events: none;">
+                    <h3 style="margin: 0; color: white; text-transform: uppercase;">Neon Shockwave</h3>
+                    <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem; font-family: sans-serif;">Pulse an
+                        energy ring.</p>
+                </div>
+                <button class="store-buy-btn"
+                    style="background: #ff0044; border: none; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">$1.99</button>
+            </div>
+
+            <div class="store-item" data-effect="comic"
+                style="background: #111; border: 2px solid #ffcc00; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="text-align: left; pointer-events: none;">
+                    <h3 style="margin: 0; color: white; text-transform: uppercase;">Comic Strike</h3>
+                    <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem; font-family: sans-serif;">BAM! POW!
+                        SMASH!</p>
+                </div>
+                <button class="store-buy-btn"
+                    style="background: #ff0044; border: none; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">$1.99</button>
+            </div>
+            <button id="restore-purchases-btn"
+                style="background: transparent; border: 1px solid #00e5ff; color: #00e5ff; padding: 12px; width: 100%; border-radius: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; margin-top: 10px; margin-bottom: 30px; transition: all 0.2s ease;">
+                Restore Purchases
+            </button>
         </div>
 
-        <div class="store-item" data-effect="fire" style="background: #111; border: 2px solid #333; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-            <div style="text-align: left; pointer-events: none;">
-                <h3 style="margin: 0; color: white; text-transform: uppercase;">Hellfire</h3>
-                <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem; font-family: sans-serif;">Leave scorch marks.</p>
-            </div>
-            <button class="store-buy-btn" style="background: #ff0044; border: none; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">$0.99</button>
-        </div>
-
-        <div class="store-item" data-effect="toxic" style="background: #111; border: 2px solid #333; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-            <div style="text-align: left; pointer-events: none;">
-                <h3 style="margin: 0; color: white; text-transform: uppercase;">Toxic Spill</h3>
-                <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem; font-family: sans-serif;">Radioactive taps.</p>
-            </div>
-            <button class="store-buy-btn" style="background: #ff0044; border: none; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">$0.99</button>
-        </div>
-        <div class="store-item" data-effect="shockwave" style="background: #111; border: 2px solid #00e5ff; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-            <div style="text-align: left; pointer-events: none;">
-                <h3 style="margin: 0; color: white; text-transform: uppercase;">Neon Shockwave</h3>
-                <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem; font-family: sans-serif;">Pulse an energy ring.</p>
-            </div>
-            <button class="store-buy-btn" style="background: #ff0044; border: none; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">$1.99</button>
-        </div>
-
-        <div class="store-item" data-effect="comic" style="background: #111; border: 2px solid #ffcc00; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-            <div style="text-align: left; pointer-events: none;">
-                <h3 style="margin: 0; color: white; text-transform: uppercase;">Comic Strike</h3>
-                <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8rem; font-family: sans-serif;">BAM! POW! SMASH!</p>
-            </div>
-            <button class="store-buy-btn" style="background: #ff0044; border: none; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">$1.99</button>
-        </div>
-        <button id="restore-purchases-btn" style="background: transparent; border: 1px solid #00e5ff; color: #00e5ff; padding: 12px; width: 100%; border-radius: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; margin-top: 10px; margin-bottom: 30px; transition: all 0.2s ease;">
-            Restore Purchases
-        </button>
     </div>
-    
-</div>
-<script src="capacitor.js"></script>
+    <script src="capacitor.js"></script>
     <script type="module" src="script.js"></script>
 </body>
 

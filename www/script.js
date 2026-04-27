@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/fireba
 import { getFirestore, collection, doc, onSnapshot, updateDoc, increment, setDoc, getDocs, deleteDoc, where, addDoc, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 const { Purchases } = window.Capacitor?.Plugins || {};
 const LOG_LEVEL_DEBUG = 1;
+const AdMob = window.Capacitor?.Plugins?.AdMob;
 
 
 const firebaseConfig = {
@@ -18,6 +19,52 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
+async function setupAds() {
+    if (!AdMob) return;
+
+    try {
+        // 1. Check/Request Permission FIRST
+        const status = await AdMob.trackingAuthorizationStatus();
+        
+        // If the user hasn't seen the prompt yet (status 'notDetermined'), show it!
+        if (status.status === 'notDetermined') {
+            await AdMob.requestTrackingAuthorization();
+        }
+
+        // 2. NOW Initialize AdMob
+        await AdMob.initialize({
+            requestTrackingAuthorization: true, // This tells the plugin to handle the popup logic
+        });
+        
+        // Listeners...
+        AdMob.addListener('onRewardedVideoAdReward', (reward) => {
+            activateBoost(); 
+        });
+
+        AdMob.addListener('onRewardedVideoAdDismissed', () => {
+            preloadAd();
+        });
+
+        preloadAd();
+    } catch (e) {
+        console.error("AdMob Setup Failed:", e);
+    }
+}
+async function preloadAd() {
+    if (!AdMob) return;
+    try {
+        const options = {
+            adUnitId: 'ca-app-pub-6409476001546392/8771954226', 
+        };
+        await AdMob.prepareRewardVideoAd(options);
+        console.log("Rewarded Ad is preloaded and ready.");
+    } catch (e) {
+        console.error("Failed to preload ad:", e);
+    }
+}
+
+// Kick off the setup
+setupAds();
 
 // --- AUDIO ARSENAL ---
 // You can replace these URLs with local files later (e.g., 'sounds/start.mp3')
@@ -30,6 +77,8 @@ function playSound(audioClip) {
     audioClip.currentTime = 0; 
     audioClip.play().catch(e => console.log("Browser blocked auto-play until user clicks:", e));
 }
+let currentDisplayVotes = {}; 
+let activeAnimations = {};
 
 window.triggerHaptics = async function(style = 'SUCCESS') {
     const Haptics = window.Capacitor?.Plugins?.Haptics;
@@ -102,42 +151,51 @@ let recentTickerMessages = [
 
 // --- 2X REWARDED AD LOGIC ---
 const adBtn = document.getElementById('double-click-ad-btn');
-
 if (adBtn) {
-    adBtn.addEventListener('click', () => {
-        // Prevent clicking if the timer is already running
+    adBtn.addEventListener('click', async () => {
         if (isDoubleClicksActive) return;
 
-        // 1. Show the "Ad"
-        alert("Simulating Ad: Imagine a 15-second video of a fake mobile game here!");
+        // If we are testing on the web, just give them the boost instantly
+        if (!AdMob) {
+            console.log("Web mode: Skipping ad and granting boost.");
+            activateBoost();
+            return;
+        }
 
-        // 2. Activate the Boost
-        isDoubleClicksActive = true;
-        let timeLeft = 30;
-
-        // 3. Change Button Styling to "Active Mode"
-        adBtn.classList.add('active-boost');
-
-        // 4. Start the Countdown
-        const timerInterval = setInterval(() => {
-            timeLeft--;
+        try {
+            // Pause your game logic/timers here if needed
+            await AdMob.showRewardVideoAd();
             
-            if (timeLeft > 0) {
-                adBtn.innerHTML = `🔥 2X ACTIVE: ${timeLeft}s`;
-            } else {
-                // 5. Timer reaches 0, reset everything
-                clearInterval(timerInterval);
-                isDoubleClicksActive = false;
-                
-                // Revert to original styling & structure
-                adBtn.classList.remove('active-boost');
-                adBtn.innerHTML = `
-                    <span class="ad-icon">📺</span>
-                    <span id="ad-text">2X VOTES</span>
-                `;
-            }
-        }, 1000); // Runs every 1000 milliseconds (1 second)
+        } catch (e) {
+            console.error("Ad failed to show:", e);
+            alert("No ad ready yet! Try again in a few seconds.");
+        }
     });
+}
+
+// --- 3. THE REWARD LOGIC (Moved to a separate function) ---
+function activateBoost() {
+    isDoubleClicksActive = true;
+    let timeLeft = 30;
+
+    adBtn.classList.add('active-boost');
+
+    const timerInterval = setInterval(() => {
+        timeLeft--;
+        
+        if (timeLeft > 0) {
+            adBtn.innerHTML = `🔥 2X ACTIVE: ${timeLeft}s`;
+        } else {
+            clearInterval(timerInterval);
+            isDoubleClicksActive = false;
+            
+            adBtn.classList.remove('active-boost');
+            adBtn.innerHTML = `
+                <span class="ad-icon">📺</span>
+                <span id="ad-text">2X VOTES</span>
+            `;
+        }
+    }, 1000);
 }
 // ==========================================
 // 🕒 DAILY ROTATION & TIMER LOGIC
@@ -616,6 +674,8 @@ function loadBattlefield(categoryName) {
     itemsData = {};
     pendingVotes = {};
     comboClicks = 0;
+    currentDisplayVotes = {}; // <-- NEW: Clear the animation tracker when switching rooms
+    activeAnimations = {};    // <-- NEW: Clear any running animations
     resetComboUI();
 
     // --- SOUND LOGIC: 1. Create a memory bank to remember the order ---
@@ -631,7 +691,6 @@ function loadBattlefield(categoryName) {
         // 1. Sort by votes (descending)
         updatedItems.sort((a, b) => b.votes - a.votes);
 
-        
         // 2. Map rank #1 to the top item's ID so we know who is winning
         if (updatedItems[0]) {
             document.body.setAttribute('data-winner', updatedItems[0].id);
@@ -647,15 +706,13 @@ function loadBattlefield(categoryName) {
                     rankingList.appendChild(itemEl);
                     
                     // --- JUICE: STAGGERED ENTRANCE ANIMATION ---
-                    // We use the 'index' to delay each item slightly more than the last
                     itemEl.style.animation = `popInStagger 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards`;
-                    itemEl.style.animationDelay = `${index * 0.06}s`; // 60ms gap between each card
+                    itemEl.style.animationDelay = `${index * 0.06}s`;
                 }
 
                 itemEl.style.order = index;
                 itemEl.querySelector('.rank-number').innerText = (index + 1);
 
-                // Update this inside loadBattlefield:
                 if (index === 0) {
                     itemEl.classList.add('rank-one');
                     itemEl.classList.remove('rank-last');
@@ -664,7 +721,7 @@ function loadBattlefield(categoryName) {
                     // DEAD LAST!
                     itemEl.classList.add('rank-last');
                     itemEl.classList.remove('rank-one');
-                    itemEl.style.borderColor = '#444'; // Optional: Give the loser a sad grey border
+                    itemEl.style.borderColor = '#444'; 
                 } else {
                     itemEl.classList.remove('rank-one', 'rank-last');
                     if (index === 1) itemEl.style.borderColor = '#C0C0C0';
@@ -672,14 +729,59 @@ function loadBattlefield(categoryName) {
                     else itemEl.style.borderColor = 'transparent';
                 }
 
-                const localBuffer = pendingVotes[item.id] || 0;
-                itemEl.querySelector('.item-votes').innerText =
-                    (item.votes + localBuffer).toLocaleString() + ' VOTES';
+                // --- NEW: SMOOTH INCOMING FIREBASE UPDATES ---
+                const newVal = item.votes;
+                const oldVal = currentDisplayVotes[item.id] || newVal; // Default to the new val on first load
+
+                // Only animate if the database number is different than what's on the screen
+                // AND ignore it if the user has pending local votes (so we don't overwrite their fast clicks)
+                if (oldVal !== newVal && (!pendingVotes[item.id] || pendingVotes[item.id] === 0)) {
+                    // Smoothly roll the number up over 1.5 seconds (1500ms)
+                    animateScore(item.id, oldVal, newVal, 1500); 
+                } else {
+                    // If it's the first time loading, or they are actively clicking, set it instantly
+                    const totalWithBuffer = newVal + (pendingVotes[item.id] || 0);
+                    currentDisplayVotes[item.id] = totalWithBuffer;
+                    const voteDisplay = itemEl.querySelector('.item-votes');
+                    if (voteDisplay) voteDisplay.innerText = totalWithBuffer.toLocaleString() + ' VOTES';
+                }
+                // ----------------------------------------------
             });
         });
     });
 }
 
+// --- NEW: NUMBER TWEENING ENGINE ---
+function animateScore(id, startVal, endVal, durationMs) {
+    const displayEl = document.querySelector(`#item-${id} .item-votes`);
+    if (!displayEl) return;
+
+    // Cancel any existing animation for this specific item so they don't fight
+    if (activeAnimations[id]) {
+        cancelAnimationFrame(activeAnimations[id]);
+    }
+
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        
+        // Calculate progress from 0.0 to 1.0
+        const progress = Math.min((timestamp - startTimestamp) / durationMs, 1);
+        
+        // "Ease-out" makes it start fast and slow down as it reaches the target
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentVal = Math.floor(easeOut * (endVal - startVal) + startVal);
+        
+        displayEl.innerText = currentVal.toLocaleString() + ' VOTES';
+        currentDisplayVotes[id] = currentVal; // Keep global state synced
+
+        if (progress < 1) {
+            activeAnimations[id] = requestAnimationFrame(step);
+        }
+    };
+    
+    activeAnimations[id] = requestAnimationFrame(step);
+}
 // --- Dynamic DOM Creation ---
 function createItemElement(id, name, imageUrl) {
     const div = document.createElement('div');
@@ -817,6 +919,10 @@ function handleMash(id, e) {
     // Update display text immediately
     const voteDisplay = document.querySelector(`#item-${id} .item-votes`);
     voteDisplay.innerText = newTotal.toLocaleString() + ' VOTES';
+    
+    // --- NEW: SYNC THE TWEEN TRACKER ---
+    // This tells the animation engine "Hey, I manually clicked it, start your next animation from this new total"
+    currentDisplayVotes[id] = newTotal;
 
     // --- CHECK FOR MILESTONE NUKE (Every 100 votes) ---
     if (Math.floor(oldTotal / 100) < Math.floor(newTotal / 100)) {
@@ -3961,7 +4067,7 @@ initRevenueCat();
 // 1. Setup the Background Music
 const bgm = new Audio('assets/bgmusic.mp3'); // UPDATE THIS PATH!
 bgm.loop = true; // Crucial: loops forever
-bgm.volume = 0.2; // Set to 60% so it doesn't drown out your tap SFX
+bgm.volume = 0.1;
 
 // 2. The Mute Button Logic
 const muteBtn = document.getElementById('mute-btn');

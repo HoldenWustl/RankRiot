@@ -259,7 +259,10 @@ h1.title {
     background: rgba(3, 3, 8, 0.95);
     backdrop-filter: blur(10px);
     width: 100%;
-    padding: 15px;
+    
+    /* FIX: Pad the top dynamically based on the iOS notch */
+    padding: calc(env(safe-area-inset-top, 20px) + 15px) 15px 15px 15px; 
+    
     box-sizing: border-box;
     z-index: 100;
     border-bottom: 1px solid #333;
@@ -271,7 +274,7 @@ h1.title {
     position: absolute;
     left: 15px;
     /* Uses the device's notch/island height, defaults to 20px if not on mobile */
-    top: calc(env(safe-area-inset-top, 20px) + 10px); 
+    top: calc(env(safe-area-inset-top, 20px) + 15px);
     z-index: 1000; /* Forces it to the very front so nothing blocks the click */
 
     /* 2. Massive Hitbox */
