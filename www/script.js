@@ -31,6 +31,45 @@ function playSound(audioClip) {
     audioClip.play().catch(e => console.log("Browser blocked auto-play until user clicks:", e));
 }
 
+window.triggerHaptics = async function(style = 'SUCCESS') {
+    const Haptics = window.Capacitor?.Plugins?.Haptics;
+    
+    // If we aren't on a mobile device, just exit quietly
+    if (!Haptics) return;
+
+    try {
+        switch (style.toUpperCase()) {
+            // Notification Types (Rhythmic patterns)
+            case 'SUCCESS':
+                await Haptics.notification({ type: 'SUCCESS' }); // Double tap
+                break;
+            case 'WARNING':
+                await Haptics.notification({ type: 'WARNING' }); // Heavy double tap
+                break;
+            case 'ERROR':
+                await Haptics.notification({ type: 'ERROR' }); // Triple pulse
+                break;
+
+            // Impact Types (Single thuds)
+            case 'HEAVY':
+                await Haptics.impact({ style: 'HEAVY' });
+                break;
+            case 'MEDIUM':
+                await Haptics.impact({ style: 'MEDIUM' });
+                break;
+            case 'LIGHT':
+                await Haptics.impact({ style: 'LIGHT' });
+                break;
+
+            default:
+                await Haptics.impact({ style: 'MEDIUM' });
+                break;
+        }
+    } catch (e) {
+        console.error("Haptics failed", e);
+    }
+};
+
 // --- UI / Screen Management ---
 const screens = {
     splash: document.getElementById('splash-screen'),
@@ -350,7 +389,7 @@ function fireGlobalBanner(message, isCustom = false) {
     globalTickerText.style.animation = 'rushAcross 3.5s linear forwards';
 
     // Massive haptic feedback
-    if(navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+   triggerHaptics('SUCCESS');
 
     // 5. TIMING LOGIC: Wait exactly 3.5s for text to finish, then fade out
     window.bannerTimeout = setTimeout(() => {
@@ -399,9 +438,8 @@ function unlockTickerButton() {
         tickerBtn.style.transform = "scale(1)";
     }, 250);
 
-    // Juice: Pop sound & Heavy Vibrate
     if (typeof playPopSound === 'function') playPopSound(10);
-    if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+   triggerHaptics('HEAVY');
 }
 function playPopSound(multiplier, effectType = 'default') {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -491,7 +529,7 @@ function showScreen(screenName) {
 document.getElementById('play-btn').addEventListener('click', () => {
   playSound(sfxStart);
     // Add a satisfying click feel even to entry
-    if(navigator.vibrate) navigator.vibrate([30, 10, 30]);
+    triggerHaptics('LIGHT');
     showScreen('category');
     document.getElementById('global-store-btn').style.display = 'flex';
     
@@ -723,7 +761,7 @@ function handleMash(id, e) {
     // Just ignited!
     if (consecutiveClicks === FIRE_THRESHOLD) {
         itemEl.classList.add('on-fire');
-        if(navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]); // Heavy buzz
+        triggerHaptics('HEAVY'); // Heavy buzz
     }
 
     // 2. Combo / Multiplier Calc (Your existing code)
@@ -824,10 +862,8 @@ function handleMash(id, e) {
     cardEl.classList.add(flashClass);
     
     // Mobile Haptics
-    if (navigator.vibrate) {
-        if(clickPower >= 10) navigator.vibrate(25);
-        else navigator.vibrate(10); 
-    }
+    if (clickPower >= 10) triggerHaptics('MEDIUM');
+    else triggerHaptics('LIGHT')
 
     // --- SORTING & RANKING LOGIC ---
     let itemsArray = Object.values(itemsData).map(item => ({
@@ -3208,7 +3244,7 @@ function triggerOvertakeEffect(winnerName, loserName) {
     const popup = wrapper.querySelector('.overtake-popup');
     const ribbon = wrapper.querySelector('.overtake-ribbon');
 
-    if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+    triggerHaptics('HEAVY');
     sfxOvertake.play();
     let autoRemoveTimer = null;
     let closing = false;
@@ -3337,33 +3373,34 @@ function triggerMilestoneNuke(name, totalVotes) {
     document.body.appendChild(banner);
 
     // 3. Massive Haptic Feedback
-    if(navigator.vibrate) navigator.vibrate([200, 50, 200, 50, 500]);
+    triggerHaptics('HEAVY');
 
     // 4. Clean up DOM
     setTimeout(() => banner.remove(), 2000);
 }
 // --- VIRAL SHARING MECHANIC ---
 window.triggerNativeShare = async function(context) {
-    playCameraSnap();
+    // 1. Safe access to the Capacitor global
+    const Share = window.Capacitor?.Plugins?.Share;
+
+    // 2. Prepare the data
     const shareData = {
         title: 'Rank Riot!',
         text: context === 'Battle' 
             ? '🚨 My guy is losing! Get in here and help me mash the vote!' 
             : '🔥 Enter the battlefield. Who is the undisputed GOAT?',
-        url: window.location.href // Automatically grabs your live URL
+        url: window.location.href
     };
 
-    // Huge haptic bump when they click share
-    if(navigator.vibrate) navigator.vibrate(150);
-
     try {
-        if (navigator.share) {
-            // Opens the native phone sharing menu (iMessage, Insta, Snap, etc.)
-            await navigator.share(shareData);
-            console.log('Successfully shared!');
+        // 3. Check if we are on a native device with the plugin available
+        if (Share) {
+            await Share.share(shareData);
+            console.log('Successfully shared via Native Share Sheet');
         } else {
-            // Fallback for Desktop: Copy link to clipboard
+            // 4. Fallback for Local Development / Desktop Browser
             await navigator.clipboard.writeText(window.location.href);
+            alert("Link copied to clipboard (Native share only works on device!)");
         }
     } catch (err) {
         console.log('Share canceled or failed:', err);
@@ -3440,7 +3477,7 @@ window.triggerRivalryReceipt = function() {
 
     // 3. Show the Modal & Haptics
     document.getElementById('receipt-modal').classList.remove('hidden');
-    if(navigator.vibrate) navigator.vibrate([100, 50, 200]);
+    triggerHaptics('HEAVY');
 };
 
 window.closeReceipt = function() {
@@ -3448,49 +3485,61 @@ window.closeReceipt = function() {
 };
 // --- JUICE: AUTO-GENERATE & SHARE RECEIPT IMAGE ---
 window.shareReceiptImage = async function() {
+    const { Share, Filesystem, Haptics } = window.Capacitor?.Plugins || {};
+    
     playCameraSnap();
+    if (Haptics) Haptics.impact({ style: 'HEAVY' });
+
     const receiptCard = document.querySelector('.receipt-card');
     const shareBtn = document.getElementById('share-receipt-btn');
     const closeBtn = document.querySelector('.close-receipt');
 
-    // 1. Hide the buttons temporarily so they don't show up in the picture
+    // 1. Hide UI elements
     shareBtn.style.display = 'none';
     closeBtn.style.display = 'none';
 
     try {
-        // 2. Take a snapshot of the HTML card
-        // useCORS is required so Wikipedia/UI-Avatar images load properly in the canvas
+        // 2. Capture Canvas
         const canvas = await html2canvas(receiptCard, { 
             backgroundColor: '#00121a',
             useCORS: true, 
-            scale: 2 // High-res image
+            scale: 2 
         });
 
-        // 3. Convert canvas to a real image file
+        // 3. Convert to Base64 string
+        // Capacitor's Filesystem plugin needs the raw base64 data (without the "data:image/png;base64," prefix)
         const dataUrl = canvas.toDataURL('image/png');
-        const blob = await (await fetch(dataUrl)).blob();
-        const file = new File([blob], 'rank-riot-beef.png', { type: 'image/png' });
+        const base64Data = dataUrl.split(',')[1];
 
-        // 4. Try to open the phone's native share drawer (iOS/Android)
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
+        if (Share && Filesystem) {
+            // 4. Save to temporary storage (Cache)
+            const fileName = `beef-${Date.now()}.png`;
+            const savedFile = await Filesystem.writeFile({
+                path: fileName,
+                data: base64Data,
+                directory: 'CACHE' // This folder gets cleaned up by iOS automatically
+            });
+
+            // 5. Share the actual native file path
+            await Share.share({
                 title: 'Rank Riot!',
                 text: 'Look at this massive gap! 🔥',
-                files: [file]
+                url: savedFile.uri, // This is the internal file:// path
+                dialogTitle: 'Share the Beef'
             });
+
         } else {
-            // Fallback for Desktop/Unsupported Browsers: Download the image directly
+            // Fallback for Desktop: Download image
             const a = document.createElement('a');
             a.href = dataUrl;
             a.download = 'rank-riot-beef.png';
             a.click();
         }
     } catch (err) {
-        console.error("Failed to generate image:", err);
-      
+        console.error("Native share failed:", err);
     }
 
-    // 5. Put the buttons back!
+    // 6. Restore UI
     shareBtn.style.display = 'block';
     closeBtn.style.display = 'block';
 };
@@ -3894,7 +3943,7 @@ async function restorePurchases() {
     }
 
     try {
-        const customerInfo = await Purchases.restorePurchases();
+        const { customerInfo } = await Purchases.restorePurchases();
         const activeEntitlements = Object.keys(customerInfo.entitlements.active);
         
         // Use global unlockedEffects variable
