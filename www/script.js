@@ -3821,29 +3821,35 @@ function updateStoreUI() {
         const thisEffectId = storeItem.getAttribute('data-effect');
         const thisBtn = storeItem.querySelector('button');
 
-        // Determine the "Natural" color of this item
+        // 1. Determine the "Natural" theme color of this specific item
         let baseColor = '#333'; // Default dark gray
         if (thisEffectId === 'shockwave') baseColor = '#00e5ff';
         if (thisEffectId === 'comic') baseColor = '#ffcc00';
 
+        // 2. Reset styles to default first (clears previous highlights)
+        storeItem.style.boxShadow = 'none';
+
         if (unlockedEffects.includes(thisEffectId)) {
             if (equippedEffect === thisEffectId) {
-                // EQUIPPED takes priority - Riot Pink
+                // EQUIPPED STATE: Riot Pink + Neon Glow
                 storeItem.style.borderColor = '#ff0055'; 
+                storeItem.style.boxShadow = '0 0 12px rgba(255, 0, 85, 0.6)'; // Dopamine Glow
+                
                 thisBtn.innerText = 'EQUIPPED';
                 thisBtn.style.color = '#ff0055';
                 thisBtn.style.background = 'transparent';
                 thisBtn.style.pointerEvents = 'none';
             } else {
-                // UNLOCKED but not equipped - Show its natural theme color
+                // UNLOCKED STATE: Standard theme colors
                 storeItem.style.borderColor = baseColor;
+                
                 thisBtn.innerText = 'EQUIP';
                 thisBtn.style.background = '#11111a';
                 thisBtn.style.color = 'white';
                 thisBtn.style.pointerEvents = 'auto';
             }
         } else {
-            // LOCKED - Show its natural theme color
+            // LOCKED STATE: Preserve theme colors for the "Armory" look
             storeItem.style.borderColor = baseColor;
         }
     });
@@ -3863,7 +3869,7 @@ async function initRevenueCat() {
     if (isNative) {
         try {
             await Purchases.setLogLevel({ level: 1 }); // 1 = DEBUG
-            await Purchases.configure({ apiKey: "test_vDqHqeeueSrYMWsPHCpGsIifusb" });
+            await Purchases.configure({ apiKey: "appl_rGtLykAQwQhBozoVCnrwIKMxZPW" });
 
             const { customerInfo } = await Purchases.getCustomerInfo();
             unlockedEffects = ['default', ...Object.keys(customerInfo.entitlements.active)];
