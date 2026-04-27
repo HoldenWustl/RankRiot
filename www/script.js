@@ -1,5 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, doc, onSnapshot, updateDoc, increment, setDoc, getDocs, deleteDoc, where, addDoc, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+const { Purchases } = window.Capacitor?.Plugins || {};
+const LOG_LEVEL_DEBUG = 1;
+
 
 const firebaseConfig = {
     apiKey: "AIzaSyCGY7NSNr1z97FMCi1IPyDVtmPnd74wsuE",
@@ -13,6 +16,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+
 
 // --- AUDIO ARSENAL ---
 // You can replace these URLs with local files later (e.g., 'sounds/start.mp3')
@@ -3704,20 +3709,14 @@ storeItems.forEach(item => {
         // If they clicked the buy/equip button, ignore the preview selection
         if (e.target.tagName.toLowerCase() === 'button') return;
 
-        // Reset all borders to their correct default colors
-        storeItems.forEach(i => {
-            const effectType = i.getAttribute('data-effect');
-            if (effectType === 'shockwave') {
-                i.style.borderColor = '#00e5ff'; // Restore Neon Cyan
-            } else if (effectType === 'comic') {
-                i.style.borderColor = '#ffcc00'; // Restore Comic Yellow
-            } else {
-                i.style.borderColor = '#333';    // Restore standard dark gray
-            }
-        });
+        // 1. Reset all borders to their correct "Natural" or "Equipped" state
+        // This clears any previous "Riot Red" preview highlights
+        updateStoreUI();
         
-        // Highlight the actively selected item in Riot Red
-        item.style.borderColor = '#ff0044';
+        // 2. Apply the "Preview" highlight (Riot Red) to the one we just tapped
+        item.style.borderColor = '#ff0044'; 
+        
+        // 3. Update the variable so the Test Pad knows which effect to show
         previewEffect = item.getAttribute('data-effect');
     });
 });
@@ -3736,7 +3735,6 @@ testPad.addEventListener('click', (e) => {
     playPopSound(1, previewEffect);
 });
 
-// 3. The Function that spawns the visual
 // 3. The Function that spawns the visual
 function spawnEffect(x, y, effectType, container) {
     const fx = document.createElement('div');
@@ -3781,45 +3779,129 @@ function spawnEffect(x, y, effectType, container) {
 
 // 4. Buy & Equip Logic
 document.querySelectorAll('.store-item button').forEach(btn => {
-    // Make sure all buttons can be clicked initially (except the one already equipped)
-    if (btn.innerText !== 'EQUIPPED') {
-        btn.style.pointerEvents = 'auto';
-    }
-
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
         const item = e.target.closest('.store-item');
-        const effectId = item.getAttribute('data-effect');
-        
-        // 1. If they don't own it yet, process the "buy"
+        const effectId = item.getAttribute('data-effect'); // e.g., 'comic', 'fire'
+
+        // 1. If NOT unlocked, trigger the real purchase
         if (!unlockedEffects.includes(effectId)) {
-            alert("Normally this triggers Apple/Google Pay. We will unlock it for now!");
-            unlockedEffects.push(effectId);
+            try {
+                // Fetch the "default" offering you created in the dashboard
+                const offerings = await Purchases.getOfferings();
+                const currentOffering = offerings.current;
+                
+                // Find the package that matches the effect ID
+                const packageToBuy = currentOffering.availablePackages.find(p => p.identifier === effectId);
+
+                if (packageToBuy) {
+                    const { customerInfo } = await Purchases.purchasePackage({ aPackage: packageToBuy });
+                    
+                    // Verify the entitlement is now active
+                    if (typeof customerInfo.entitlements.active[effectId] !== "undefined") {
+                        unlockedEffects.push(effectId);
+                        alert("Purchase successful!");
+                    }
+                }
+            } catch (error) {
+                if (!error.userCancelled) {
+                    alert("Purchase failed: " + error.message);
+                }
+                return; // Stop if purchase failed
+            }
         }
-        
+
         // 2. Equip the item
         equippedEffect = effectId;
-        
-        // 3. Reset ALL buttons in the store to "EQUIP" if they own them
-        document.querySelectorAll('.store-item').forEach(storeItem => {
-            const thisEffectId = storeItem.getAttribute('data-effect');
-            const thisBtn = storeItem.querySelector('button');
-            
-            if (unlockedEffects.includes(thisEffectId)) {
-                thisBtn.innerText = 'EQUIP';
-                thisBtn.style.background = '#333';
-                thisBtn.style.color = 'white';
-                thisBtn.style.pointerEvents = 'auto'; // Make it clickable again
-                thisBtn.style.cursor = 'pointer';
-            }
-        });
-        
-        // 4. Highlight the newly equipped button
-        e.target.innerText = 'EQUIPPED';
-        e.target.style.background = 'transparent';
-        e.target.style.color = '#ff0044';
-        e.target.style.pointerEvents = 'none'; // Can't equip what's already equipped
+        updateStoreUI();
     });
 });
+
+function updateStoreUI() {
+    document.querySelectorAll('.store-item').forEach(storeItem => {
+        const thisEffectId = storeItem.getAttribute('data-effect');
+        const thisBtn = storeItem.querySelector('button');
+
+        // Determine the "Natural" color of this item
+        let baseColor = '#333'; // Default dark gray
+        if (thisEffectId === 'shockwave') baseColor = '#00e5ff';
+        if (thisEffectId === 'comic') baseColor = '#ffcc00';
+
+        if (unlockedEffects.includes(thisEffectId)) {
+            if (equippedEffect === thisEffectId) {
+                // EQUIPPED takes priority - Riot Pink
+                storeItem.style.borderColor = '#ff0055'; 
+                thisBtn.innerText = 'EQUIPPED';
+                thisBtn.style.color = '#ff0055';
+                thisBtn.style.background = 'transparent';
+                thisBtn.style.pointerEvents = 'none';
+            } else {
+                // UNLOCKED but not equipped - Show its natural theme color
+                storeItem.style.borderColor = baseColor;
+                thisBtn.innerText = 'EQUIP';
+                thisBtn.style.background = '#11111a';
+                thisBtn.style.color = 'white';
+                thisBtn.style.pointerEvents = 'auto';
+            }
+        } else {
+            // LOCKED - Show its natural theme color
+            storeItem.style.borderColor = baseColor;
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const restoreBtn = document.getElementById('restore-purchases-btn');
+    if (restoreBtn) {
+        restoreBtn.addEventListener('click', restorePurchases);
+    }
+});
+
+async function initRevenueCat() {
+    // 2. Check if we are actually on a mobile device
+    const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+
+    if (isNative) {
+        try {
+            await Purchases.setLogLevel({ level: 1 }); // 1 = DEBUG
+            await Purchases.configure({ apiKey: "test_vDqHqeeueSrYMWsPHCpGsIifusb" });
+
+            const { customerInfo } = await Purchases.getCustomerInfo();
+            unlockedEffects = ['default', ...Object.keys(customerInfo.entitlements.active)];
+            updateStoreUI(); 
+        } catch (e) {
+            console.error("RevenueCat Init Error:", e);
+        }
+    } else {
+        // 3. Optional: Mock data for local browser testing
+        console.log("Running in browser: RevenueCat is disabled.");
+        unlockedEffects = ['default']; // Unlock something manually to test UI
+        updateStoreUI();
+    }
+}
+
+async function restorePurchases() {
+    console.log("Restore button clicked");
+    
+    if (!(window.Capacitor && window.Capacitor.isNativePlatform())) {
+        alert("Restoration only works on actual mobile devices.");
+        return;
+    }
+
+    try {
+        const customerInfo = await Purchases.restorePurchases();
+        const activeEntitlements = Object.keys(customerInfo.entitlements.active);
+        
+        // Use global unlockedEffects variable
+        unlockedEffects = ['default', ...activeEntitlements]; 
+        
+        updateStoreUI();
+        alert("Purchases restored!");
+    } catch (e) {
+        alert("Restoration failed: " + e.message);
+    }
+}
+
+initRevenueCat();
 
 // 1. Setup the Background Music
 const bgm = new Audio('assets/bgmusic.mp3'); // UPDATE THIS PATH!

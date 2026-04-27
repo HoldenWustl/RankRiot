@@ -3,6 +3,7 @@
     "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.3.0",
     "@capacitor/ios": "^8.3.0",
+    "@revenuecat/purchases-capacitor": "^13.0.1",
     "axios": "^1.15.0"
   },
   "name": "ranked",

@@ -1701,3 +1701,8 @@ button.screenshot-hint:active {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); } 
 }
+#restore-purchases-btn:active {
+    background: #00e5ff22; /* Light blue tint */
+    box-shadow: 0 0 15px #00e5ff;
+    transform: scale(0.98);
+}
