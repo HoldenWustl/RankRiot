@@ -133,8 +133,16 @@ const body = document.body;
 // --- GLOBAL BOOST STATE ---
 let isDoubleClicksActive = false;
 // --- AUDIO DOPAMINE (Web Audio API) ---
+// Ensure vendor prefixes are handled for older iOS
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
+
+// Unlock audio context on the first tap anywhere on the screen
+document.body.addEventListener('touchstart', function() {
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}, { once: true }); // 'once: true' ensures it only runs the first time
 // --- GLOBAL ALERTS LISTENER ---
 const globalTickerContainer = document.getElementById('global-ticker-container');
 const globalTickerText = document.getElementById('global-ticker-text');
