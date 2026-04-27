@@ -4075,68 +4075,68 @@ async function restorePurchases() {
 
 initRevenueCat();
 
-// 1. Setup the Background Music
-const bgm = new Audio('assets/bgmusic.mp3'); // UPDATE THIS PATH!
-bgm.loop = true; // Crucial: loops forever
-bgm.volume = 0.1;
 
-// 2. The Mute Button Logic
+let isMuted = false; 
+
+// 2. BGM SETUP & ROUTING
+const bgm = new Audio('assets/bgmusic.mp3');
+bgm.loop = true;
+bgm.crossOrigin = "anonymous";
+
+// Route BGM through Web Audio so iOS respects the volume
+const bgmSource = audioCtx.createMediaElementSource(bgm);
+const bgmGain = audioCtx.createGain();
+bgmGain.gain.setValueAtTime(0.1, audioCtx.currentTime); // 10% Volume
+
+bgmSource.connect(bgmGain);
+bgmGain.connect(audioCtx.destination);
+
+// 3. MUTE BUTTON LOGIC
 const muteBtn = document.getElementById('mute-btn');
-let isMuted = false;
-
-muteBtn.addEventListener('click', (e) => {
-    // Stop the click from triggering the "first tap" logic underneath
-    e.stopPropagation(); 
-    
-    isMuted = !isMuted;
-    bgm.muted = isMuted;
-    
-    // Toggle the icon visually
-    if (isMuted) {
-        muteBtn.innerText = '🔇';
-        muteBtn.style.borderColor = '#555';
-        muteBtn.style.boxShadow = 'none'; // Kill the neon glow when muted
-    } else {
-        muteBtn.innerText = '🔊';
-        muteBtn.style.borderColor = '#00e5ff';
-        muteBtn.style.boxShadow = '0 0 10px #00e5ff'; // Turn the neon back on
+if (muteBtn) {
+    muteBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        isMuted = !isMuted;
         
-        // If they unmuted but the audio never started, start it now
-        if (bgm.paused) {
-            bgm.play().catch(err => console.log("Audio play blocked by browser:", err));
+        if (isMuted) {
+            bgm.pause();
+            audioCtx.suspend(); // Stops tap sounds too
+            muteBtn.innerText = '🔇';
+        } else {
+            bgm.play();
+            audioCtx.resume();
+            muteBtn.innerText = '🔊';
         }
-    }
-});
+    });
+}
 
-// 3. The "First Tap" Autoplay Unlocker
-// This listens for the very first time the user touches the screen, starts the music, then destroys itself.
+// 4. THE "FIRST TAP" UNLOCKER
 const startAudio = () => {
-    if (!isMuted && bgm.paused) {
-        bgm.play().catch(err => console.log("Waiting for user interaction:", err));
+    // Resume context if iOS suspended it
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
     }
-    // Remove the listener so it doesn't try to fire this command on every single mash
+    
+    // Play BGM only if not explicitly muted
+    if (!isMuted && bgm.paused) {
+        bgm.play().catch(err => console.log("Startup audio blocked:", err));
+    }
+    
     document.removeEventListener('pointerdown', startAudio);
 };
-
-// Listen for a touch anywhere on the screen
 document.addEventListener('pointerdown', startAudio);
-// 1. Grab the App plugin
-const App = window.Capacitor?.Plugins?.App;
 
+// 5. CAPACITOR BACKGROUNDING
+const App = window.Capacitor?.Plugins?.App;
 if (App) {
-    // --- 2. LISTEN FOR MINIMIZE (App Paused) ---
     App.addListener('appStateChange', ({ isActive }) => {
         if (!isActive) {
-            // The app just went into the background (user swiped home)
-            console.log("App minimized. Pausing music.");
             bgm.pause();
+            audioCtx.suspend();
         } else {
-            // The app just came back to the foreground
-            console.log("App resumed. Checking music status.");
-            
-            // Only resume if the user hasn't explicitly muted it
             if (!isMuted) {
-                bgm.play().catch(err => console.log("Audio resume blocked:", err));
+                bgm.play();
+                audioCtx.resume();
             }
         }
     });
