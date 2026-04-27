@@ -590,6 +590,7 @@ document.getElementById('play-btn').addEventListener('click', () => {
     triggerHaptics('LIGHT');
     showScreen('category');
     document.getElementById('global-store-btn').style.display = 'flex';
+    document.getElementById('mute-btn').style.right = '80px';
     
     // START PRELOADING WHILE THEY CHOOSE A CATEGORY
     preloadCategoryImages(); 
@@ -600,6 +601,7 @@ document.getElementById('back-btn').addEventListener('click', () => {
     if (activeListener) activeListener(); // Stop listening to Firebase
     showScreen('category');
     document.getElementById('global-store-btn').style.display = 'flex';
+    document.getElementById('mute-btn').style.right = '80px';
     currentCategory = null;
     rankingList.innerHTML = ''; // Clear DOM
     
@@ -626,6 +628,7 @@ document.addEventListener('click', (e) => {
     loadBattlefield(currentCategory);
     playWooshSound();
     document.getElementById('global-store-btn').style.display = 'none';
+    document.getElementById('mute-btn').style.right = '20px';
 });
 
 // --- Game State ---
@@ -4109,3 +4112,24 @@ const startAudio = () => {
 
 // Listen for a touch anywhere on the screen
 document.addEventListener('pointerdown', startAudio);
+// 1. Grab the App plugin
+const App = window.Capacitor?.Plugins?.App;
+
+if (App) {
+    // --- 2. LISTEN FOR MINIMIZE (App Paused) ---
+    App.addListener('appStateChange', ({ isActive }) => {
+        if (!isActive) {
+            // The app just went into the background (user swiped home)
+            console.log("App minimized. Pausing music.");
+            bgm.pause();
+        } else {
+            // The app just came back to the foreground
+            console.log("App resumed. Checking music status.");
+            
+            // Only resume if the user hasn't explicitly muted it
+            if (!isMuted) {
+                bgm.play().catch(err => console.log("Audio resume blocked:", err));
+            }
+        }
+    });
+}
