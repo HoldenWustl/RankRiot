@@ -476,9 +476,37 @@ h1.title {
    Just a saturate nudge + drop-shadow halo + outer aura + scale settle.
    The ::after below handles all interior color.
    ============================================================ */
+/* ============================================================
+   .list-item — OUTER HALO + SQUISH-AND-TILT
+   Pattern: peak at 0% → recoil dip at 45% → rest at 100%.
+   The midpoint going *slightly below* baseline is what makes
+   it feel like the card physically absorbs the impact.
+   ============================================================ */
+@keyframes hit-standard {
+    0% {
+        transform: scale(1.018) rotate(0.4deg);
+        filter: brightness(1.10) saturate(1.15);
+        box-shadow:
+            inset 0 0 0 9999px rgba(0, 180, 255, 0.20),
+            inset 0 0 0 1px    rgba(180, 240, 255, 0.50),
+            0 0 14px 0         rgba(0, 229, 255, 0.38);
+    }
+    45% {
+        transform: scale(0.996) rotate(-0.15deg);
+    }
+    100% {
+        transform: scale(1) rotate(0);
+        filter: brightness(1) saturate(1);
+        box-shadow:
+            inset 0 0 0 9999px rgba(0, 180, 255, 0),
+            inset 0 0 0 1px    rgba(180, 240, 255, 0),
+            0 0 14px 0         rgba(0, 229, 255, 0);
+    }
+}
+
 @keyframes hit-gold {
     0% {
-        transform: scale(1.005);
+        transform: scale(1.028) rotate(0.7deg);
         filter:
             saturate(1.12)
             drop-shadow(0 0 8px  rgba(255, 200, 60, 0.45))
@@ -487,8 +515,12 @@ h1.title {
             0 0 14px 0 rgba(255, 200, 60, 0.40),
             0 0 36px 0 rgba(255, 165, 30, 0.18);
     }
+    45% {
+        /* recoil dip — the "squish" frame */
+        transform: scale(0.994) rotate(-0.30deg);
+    }
     100% {
-        transform: scale(1);
+        transform: scale(1) rotate(0);
         filter: saturate(1)
                 drop-shadow(0 0 0 transparent)
                 drop-shadow(0 0 0 transparent);
@@ -500,7 +532,7 @@ h1.title {
 
 @keyframes hit-silver {
     0% {
-        transform: scale(1.005);
+        transform: scale(1.025) rotate(-0.5deg);  /* tilts the OTHER way for variety */
         filter:
             saturate(1.12)
             drop-shadow(0 0 7px  rgba(180, 230, 255, 0.45))
@@ -509,8 +541,11 @@ h1.title {
             0 0 14px 0 rgba(180, 230, 255, 0.38),
             0 0 36px 0 rgba(0,   190, 255, 0.16);
     }
+    45% {
+        transform: scale(0.996) rotate(0.20deg);
+    }
     100% {
-        transform: scale(1);
+        transform: scale(1) rotate(0);
         filter: saturate(1)
                 drop-shadow(0 0 0 transparent)
                 drop-shadow(0 0 0 transparent);
@@ -522,7 +557,7 @@ h1.title {
 
 @keyframes hit-bronze {
     0% {
-        transform: scale(1.005);
+        transform: scale(1.025) rotate(0.6deg);
         filter:
             saturate(1.15)
             drop-shadow(0 0 7px  rgba(220, 130, 50, 0.45))
@@ -531,8 +566,11 @@ h1.title {
             0 0 14px 0 rgba(220, 130, 50, 0.38),
             0 0 36px 0 rgba(170, 80,  20, 0.18);
     }
+    45% {
+        transform: scale(0.995) rotate(-0.25deg);
+    }
     100% {
-        transform: scale(1);
+        transform: scale(1) rotate(0);
         filter: saturate(1)
                 drop-shadow(0 0 0 transparent)
                 drop-shadow(0 0 0 transparent);
@@ -1108,27 +1146,6 @@ winners-container {
     will-change: box-shadow, filter, transform;
 }
 
-/* ============================================================
-   1. STANDARD — "Blue Wash"
-   ============================================================ */
-@keyframes hit-standard {
-    0% {
-        transform: scale(1.008);
-        filter: brightness(1.15) saturate(1.2);
-        box-shadow:
-            inset 0 0 0 9999px rgba(0, 180, 255, 0.22),     /* body */
-            inset 0 0 0 1px    rgba(180, 240, 255, 0.55),   /* hairline */
-            0 0 14px 0         rgba(0, 229, 255, 0.40);     /* aura */
-    }
-    100% {
-        transform: scale(1);
-        filter: brightness(1) saturate(1);
-        box-shadow:
-            inset 0 0 0 9999px rgba(0, 180, 255, 0),
-            inset 0 0 0 1px    rgba(180, 240, 255, 0),
-            0 0 14px 0         rgba(0, 229, 255, 0);
-    }
-}
 
 /* Container to keep image and SVG perfectly aligned */
 .item-pic-wrapper {
