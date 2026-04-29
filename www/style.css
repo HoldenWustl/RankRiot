@@ -416,7 +416,10 @@ h1.title {
 ------------------------------------------- */
 .list-item.flash-gold { --glow-color: #ffaa00; --core-color: #ffe699; }
 .list-item.flash-silver { --glow-color: var(--riot-blue); --core-color: #ccf9ff; }
-.list-item.flash-bronze { --glow-color: var(--riot-pink); --core-color: #ffb3cc; }
+.list-item.flash-bronze {
+    --glow-color: #d4843a;   /* warm copper for the spinning conic */
+    --core-color: #ffd9a8;   /* light copper "white-hot" core of the spin */
+}
 
 /* 1. The items physically pump like a heartbeat */
 @keyframes neon-throb {
@@ -462,6 +465,107 @@ h1.title {
     border-radius: 13px;
     z-index: 1;
 }
+.list-item.flash-gold::after   { animation: hit-gold-after   0.85s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+.list-item.flash-silver::after { animation: hit-silver-after 0.70s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+.list-item.flash-bronze::after { animation: hit-bronze-after 0.60s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+
+/* Each keyframe stays opaque. White sear → tier color → dim warm → rest. */
+/* ============================================================
+   .list-item — OUTER HALO ONLY
+   No inset, no body wash, no brightness.
+   Just a saturate nudge + drop-shadow halo + outer aura + scale settle.
+   The ::after below handles all interior color.
+   ============================================================ */
+@keyframes hit-gold {
+    0% {
+        transform: scale(1.005);
+        filter:
+            saturate(1.12)
+            drop-shadow(0 0 8px  rgba(255, 200, 60, 0.45))
+            drop-shadow(0 0 22px rgba(255, 165, 30, 0.22));
+        box-shadow:
+            0 0 14px 0 rgba(255, 200, 60, 0.40),
+            0 0 36px 0 rgba(255, 165, 30, 0.18);
+    }
+    100% {
+        transform: scale(1);
+        filter: saturate(1)
+                drop-shadow(0 0 0 transparent)
+                drop-shadow(0 0 0 transparent);
+        box-shadow:
+            0 0 14px 0 rgba(255, 200, 60, 0),
+            0 0 36px 0 rgba(255, 165, 30, 0);
+    }
+}
+
+@keyframes hit-silver {
+    0% {
+        transform: scale(1.005);
+        filter:
+            saturate(1.12)
+            drop-shadow(0 0 7px  rgba(180, 230, 255, 0.45))
+            drop-shadow(0 0 22px rgba(0,   190, 255, 0.22));
+        box-shadow:
+            0 0 14px 0 rgba(180, 230, 255, 0.38),
+            0 0 36px 0 rgba(0,   190, 255, 0.16);
+    }
+    100% {
+        transform: scale(1);
+        filter: saturate(1)
+                drop-shadow(0 0 0 transparent)
+                drop-shadow(0 0 0 transparent);
+        box-shadow:
+            0 0 14px 0 rgba(180, 230, 255, 0),
+            0 0 36px 0 rgba(0,   190, 255, 0);
+    }
+}
+
+@keyframes hit-bronze {
+    0% {
+        transform: scale(1.005);
+        filter:
+            saturate(1.15)
+            drop-shadow(0 0 7px  rgba(220, 130, 50, 0.45))
+            drop-shadow(0 0 22px rgba(170, 80,  20, 0.22));
+        box-shadow:
+            0 0 14px 0 rgba(220, 130, 50, 0.38),
+            0 0 36px 0 rgba(170, 80,  20, 0.18);
+    }
+    100% {
+        transform: scale(1);
+        filter: saturate(1)
+                drop-shadow(0 0 0 transparent)
+                drop-shadow(0 0 0 transparent);
+        box-shadow:
+            0 0 14px 0 rgba(220, 130, 50, 0),
+            0 0 36px 0 rgba(170, 80,  20, 0);
+    }
+}
+
+/* ============================================================
+   ::after — BODY COLOR ONLY
+   3-stop: tier peak → warm afterglow → rest.
+   NO white sear (that was the blinding part).
+   Peak hex chosen to read as "gold/silver/bronze" not "lit-up gold/silver/bronze."
+   ============================================================ */
+@keyframes hit-gold-after {
+    0%   { background: #d4a13a; }            /* rich gold, not pure yellow */
+    35%  { background: #6b4a14; }            /* warm afterglow */
+    100% { background: var(--dark-accent); }
+}
+
+@keyframes hit-silver-after {
+    0%   { background: #a8d4ee; }            /* cool silver */
+    35%  { background: #2a4855; }            /* deep cool afterglow */
+    100% { background: var(--dark-accent); }
+}
+
+@keyframes hit-bronze-after {
+    0%   { background: #c47a2c; }            /* rich copper */
+    35%  { background: #4a2810; }            /* deep warm afterglow */
+    100% { background: var(--dark-accent); }
+}
+
 #mute-btn {
     transition: right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smooth sliding */
 }
@@ -989,69 +1093,43 @@ winners-container {
     70% { transform: translate(-50%, -50%) scale(1.1); filter: brightness(1.2); }
     100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
 }
-/* --- JUICE: METALLIC CLICK FLASHES --- */
-/* Attach .list-item and add !important to override the idle crown-glow animations */
-.list-item.flash-standard { animation: flashStandard 0.3s ease-out !important; }
-.list-item.flash-gold { animation: flashGold 0.4s ease-out !important; }
-.list-item.flash-silver { animation: flashSilver 0.35s ease-out !important; }
-.list-item.flash-bronze { animation: flashBronze 0.3s ease-out !important; }
 
-/* --- FIX: Stop normal transitions from fighting the flash --- */
-.list-item.flash-standard, 
-.list-item.flash-gold, 
-.list-item.flash-silver, 
+.list-item.flash-standard { animation: hit-standard 0.50s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+.list-item.flash-gold     { animation: hit-gold     0.85s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+.list-item.flash-silver   { animation: hit-silver   0.70s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+.list-item.flash-bronze   { animation: hit-bronze   0.60s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+
+.list-item.flash-standard,
+.list-item.flash-gold,
+.list-item.flash-silver,
 .list-item.flash-bronze {
-    transition: none !important; 
-    z-index: 50 !important; /* Bring the flashed item to the front */
+    transition: none !important;
+    z-index: 100 !important;
+    will-change: box-shadow, filter, transform;
 }
 
-/* Standard Flash (Ranks 4+) - Subtle white hit */
-@keyframes flashStandard {
-    0% { background-color: rgba(255, 255, 255, 0.15); transform: scale(0.98); }
-    100% { background-color: transparent; transform: scale(1); }
-}
-
-/* Gold Flash (Rank 1) - Massive glowing yellow hit */
-@keyframes flashGold {
-    0% { 
-        background-color: rgba(255, 215, 0, 0.4); 
-        transform: scale(0.95); 
-        box-shadow: 0 0 30px #FFD700 inset, 0 0 20px #FFD700; 
+/* ============================================================
+   1. STANDARD — "Blue Wash"
+   ============================================================ */
+@keyframes hit-standard {
+    0% {
+        transform: scale(1.008);
+        filter: brightness(1.15) saturate(1.2);
+        box-shadow:
+            inset 0 0 0 9999px rgba(0, 180, 255, 0.22),     /* body */
+            inset 0 0 0 1px    rgba(180, 240, 255, 0.55),   /* hairline */
+            0 0 14px 0         rgba(0, 229, 255, 0.40);     /* aura */
     }
-    100% { 
-        background-color: transparent; 
-        transform: scale(1); 
-        box-shadow: 0 0 0px transparent inset, 0 0 0px transparent; 
-    }
-}
-
-/* Silver Flash (Rank 2) - Bright metallic hit */
-@keyframes flashSilver {
-    0% { 
-        background-color: rgba(192, 192, 192, 0.3); 
-        transform: scale(0.96); 
-        box-shadow: 0 0 20px #C0C0C0 inset, 0 0 15px #C0C0C0; 
-    }
-    100% { 
-        background-color: transparent; 
-        transform: scale(1); 
-        box-shadow: 0 0 0px transparent inset, 0 0 0px transparent; 
+    100% {
+        transform: scale(1);
+        filter: brightness(1) saturate(1);
+        box-shadow:
+            inset 0 0 0 9999px rgba(0, 180, 255, 0),
+            inset 0 0 0 1px    rgba(180, 240, 255, 0),
+            0 0 14px 0         rgba(0, 229, 255, 0);
     }
 }
 
-/* Bronze Flash (Rank 3) - Warm copper hit */
-@keyframes flashBronze {
-    0% { 
-        background-color: rgba(205, 127, 50, 0.3); 
-        transform: scale(0.97); 
-        box-shadow: 0 0 15px #CD7F32 inset, 0 0 10px #CD7F32; 
-    }
-    100% { 
-        background-color: transparent; 
-        transform: scale(1); 
-        box-shadow: 0 0 0px transparent inset, 0 0 0px transparent; 
-    }
-}
 /* Container to keep image and SVG perfectly aligned */
 .item-pic-wrapper {
     position: relative;
