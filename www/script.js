@@ -629,6 +629,7 @@ document.addEventListener('click', (e) => {
 
     // 3. It's a valid live card! Run your original logic:
     playSound(sfxMenu); // Snappy UI click
+    triggerHaptics('MEDIUM');
     currentCategory = card.getAttribute('data-list');
     const name = card.querySelector('.cat-name').innerText;
     currentListTitle.innerText = name;
@@ -685,15 +686,16 @@ function loadBattlefield(categoryName) {
     itemsData = {};
     pendingVotes = {};
     comboClicks = 0;
-    currentDisplayVotes = {}; // <-- NEW: Clear the animation tracker when switching rooms
-    activeAnimations = {};    // <-- NEW: Clear any running animations
+    currentDisplayVotes = {}; 
+    activeAnimations = {};    
     resetComboUI();
 
-    // --- SOUND LOGIC: 1. Create a memory bank to remember the order ---
     let previousOrder = [];
 
-    // Start live listener
-    activeListener = onSnapshot(listRef, (snapshot) => {
+    // Start live listener with metadata enabled
+    activeListener = onSnapshot(listRef, { includeMetadataChanges: true }, (snapshot) => {
+        const isLocalUpdate = snapshot.metadata.hasPendingWrites;
+
         let updatedItems = [];
         snapshot.forEach(doc => {
             updatedItems.push({ id: doc.id, ...doc.data() });
@@ -702,21 +704,20 @@ function loadBattlefield(categoryName) {
         // 1. Sort by votes (descending)
         updatedItems.sort((a, b) => b.votes - a.votes);
 
-        // 2. Map rank #1 to the top item's ID so we know who is winning
         if (updatedItems[0]) {
             document.body.setAttribute('data-winner', updatedItems[0].id);
         }
 
         animateRankReorder(rankingList, () => {
             updatedItems.forEach((item, index) => {
-                itemsData[item.id] = item;
+                // Keep track of the server value for math
+                const oldServerVal = itemsData[item.id]?.votes || item.votes;
+                itemsData[item.id] = item; 
 
                 let itemEl = document.getElementById(`item-${item.id}`);
                 if (!itemEl) {
                     itemEl = createItemElement(item.id, item.name, item.imageUrl);
                     rankingList.appendChild(itemEl);
-                    
-                    // --- JUICE: STAGGERED ENTRANCE ANIMATION ---
                     itemEl.style.animation = `popInStagger 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards`;
                     itemEl.style.animationDelay = `${index * 0.06}s`;
                 }
@@ -724,39 +725,43 @@ function loadBattlefield(categoryName) {
                 itemEl.style.order = index;
                 itemEl.querySelector('.rank-number').innerText = (index + 1);
 
+                // --- RESTORED: BORDER & RANK STYLING ---
                 if (index === 0) {
                     itemEl.classList.add('rank-one');
                     itemEl.classList.remove('rank-last');
                     itemEl.style.borderColor = 'transparent';
                 } else if (index === updatedItems.length - 1) {
-                    // DEAD LAST!
                     itemEl.classList.add('rank-last');
                     itemEl.classList.remove('rank-one');
                     itemEl.style.borderColor = '#444'; 
                 } else {
                     itemEl.classList.remove('rank-one', 'rank-last');
-                    if (index === 1) itemEl.style.borderColor = '#C0C0C0';
-                    else if (index === 2) itemEl.style.borderColor = '#CD7F32';
+                    if (index === 1) itemEl.style.borderColor = '#C0C0C0'; // Silver
+                    else if (index === 2) itemEl.style.borderColor = '#CD7F32'; // Bronze
                     else itemEl.style.borderColor = 'transparent';
                 }
 
-                // --- NEW: SMOOTH INCOMING FIREBASE UPDATES ---
-                const newVal = item.votes;
-                const oldVal = currentDisplayVotes[item.id] || newVal; // Default to the new val on first load
+                // --- FIXED: SMOOTH NUMBERS (NO 54 -> 53 JUMP) ---
+                const newVal = item.votes; 
+                const buffer = pendingVotes[item.id] || 0;
+                const targetTotal = newVal + buffer;
+                const currentlyVisible = currentDisplayVotes[item.id] || newVal;
+                const voteDisplay = itemEl.querySelector('.item-votes');
 
-                // Only animate if the database number is different than what's on the screen
-                // AND ignore it if the user has pending local votes (so we don't overwrite their fast clicks)
-                if (oldVal !== newVal && (!pendingVotes[item.id] || pendingVotes[item.id] === 0)) {
-                    // Smoothly roll the number up over 1.5 seconds (1500ms)
-                    animateScore(item.id, oldVal, newVal, 1500); 
-                } else {
-                    // If it's the first time loading, or they are actively clicking, set it instantly
-                    const totalWithBuffer = newVal + (pendingVotes[item.id] || 0);
-                    currentDisplayVotes[item.id] = totalWithBuffer;
-                    const voteDisplay = itemEl.querySelector('.item-votes');
-                    if (voteDisplay) voteDisplay.innerText = totalWithBuffer.toLocaleString() + ' VOTES';
+                if (isLocalUpdate) {
+                    // Your click: Update instantly
+                    currentDisplayVotes[item.id] = targetTotal;
+                    if (voteDisplay) voteDisplay.innerText = targetTotal.toLocaleString() + ' VOTES';
+                } 
+                else if (targetTotal !== currentlyVisible) {
+                    // Someone else's click: Animate it
+                    animateScore(item.id, currentlyVisible, targetTotal, 1500);
+                } 
+                else {
+                    // Stable state
+                    currentDisplayVotes[item.id] = targetTotal;
+                    if (voteDisplay) voteDisplay.innerText = targetTotal.toLocaleString() + ' VOTES';
                 }
-                // ----------------------------------------------
             });
         });
     });
@@ -798,6 +803,7 @@ function createItemElement(id, name, imageUrl) {
     const div = document.createElement('div');
     div.classList.add('list-item');
     div.id = `item-${id}`; 
+    div.energy = 0; // Initialize energy state
     
     const safeImage = imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ff0055&color=fff&size=128&bold=true`;
 
@@ -809,8 +815,9 @@ function createItemElement(id, name, imageUrl) {
             
             <img class="item-pic" src="${safeImage}" alt="${name}" draggable="false" />
             <svg class="mash-trace-svg" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="46"></circle>
-            </svg>
+        <circle class="trace-bg" cx="50" cy="50" r="46"></circle>
+        <circle class="trace-energy" cx="50" cy="50" r="46"></circle>
+    </svg>
         </div>
         <div class="item-info">
             <h3 class="item-name">${name}</h3>
@@ -821,11 +828,13 @@ function createItemElement(id, name, imageUrl) {
         </div>
     `;
     
+    // --- CONSOLIDATED BUTTON LOGIC ---
     const btn = div.querySelector('.mash-btn');
     btn.addEventListener('pointerdown', (e) => {
+        // 1. Trigger the actual game logic
         handleMash(id, e);
         
-        // Bounce the crown (if they have it)
+        // 2. Bounce the crown (if they have it)
         const crown = div.querySelector('.crown-icon');
         if (crown) {
             crown.classList.remove('vote-bounce');
@@ -833,7 +842,7 @@ function createItemElement(id, name, imageUrl) {
             crown.classList.add('vote-bounce');
         }
 
-        // Bounce the trash (if they have it)
+        // 3. Bounce the trash (if they have it)
         const trash = div.querySelector('.trash-icon');
         if (trash) {
             trash.classList.remove('vote-bounce');
@@ -842,8 +851,36 @@ function createItemElement(id, name, imageUrl) {
         }
     });
 
+    // --- DECAY LOOP ---
+    setInterval(() => {
+        if (div.energy > 0) {
+            div.energy -= 1.5; 
+            if (div.energy < 0) div.energy = 0;
+            updateTrace(div); // Make sure this function is defined globally!
+        }
+    }, 16); 
+
     return div;
 }
+function updateTrace(el) {
+    const circle = el.querySelector('.trace-energy');
+    if (!circle) return;
+
+    // 1. Update the fill (0 to 100 energy)
+    const offset = 289 - (289 * (el.energy / 100));
+    circle.style.strokeDashoffset = offset;
+    
+    // 2. Hide if no energy to save GPU resources
+    circle.style.opacity = el.energy > 2 ? 1 : 0;
+
+    // 3. Toggle the "Charged" state (replaces the ugly red)
+    if (el.energy >= 85) {
+        circle.classList.add('charged');
+    } else {
+        circle.classList.remove('charged');
+    }
+}
+
 function handleMash(id, e) {
     spawnEffect(e.clientX, e.clientY, equippedEffect, document.body);
 
@@ -946,19 +983,11 @@ function handleMash(id, e) {
     playPopSound(clickPower, equippedEffect); // Play different sounds based on the effect type and click power
 
     // --- ULTRA-SMOOTH TRACE ANIMATION (JS-DRIVEN) ---
-    const circle = itemEl.querySelector('.mash-trace-svg circle');
-    if (circle) {
-        // Circumference is ~289 for r=46
-        circle.animate([
-            { strokeDashoffset: '289', transform: 'scale(0.96)', opacity: 1 },
-            { strokeDashoffset: '0', transform: 'scale(1.08)', opacity: 1, offset: 0.6 },
-            { strokeDashoffset: '-20', transform: 'scale(1.12)', opacity: 0 }
-        ], {
-            duration: 350,
-            easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
-            fill: 'none' // Ensures it disappears and resets automatically
-        });
-    }
+    if (itemEl) {
+    // Add 15 energy per click (reaches full in ~7 clicks)
+    itemEl.energy = Math.min((itemEl.energy || 0) + 15, 100);
+    updateTrace(itemEl);
+}
 
     // --- JUICE: RANK-BASED HIT FLASHES ---
     const cardEl = document.getElementById(`item-${id}`);
@@ -1053,21 +1082,29 @@ function handleMash(id, e) {
 }
 
 // --- Firebase Batch Writer (Critical for Free Tier) ---
-// Ticks every 2 seconds to send buffered clicks.
-setInterval(() => {
+setInterval(async () => {
     if (!currentCategory) return;
     
-    Object.keys(pendingVotes).forEach(itemId => {
-        const votesToSend = pendingVotes[itemId];
-        if (votesToSend > 0) {
-            const itemRef = doc(db, `lists/${currentCategory}/items`, itemId);
-            updateDoc(itemRef, {
-                votes: increment(votesToSend)
-            });
-            // Clear local buffer AFTER sending
-            pendingVotes[itemId] = 0; 
+    for (const itemId of Object.keys(pendingVotes)) {
+        const amountToSend = pendingVotes[itemId];
+        
+        if (amountToSend > 0) {
+            // 1. Subtract FROM the buffer IMMEDIATELY before the call
+            // This prevents the "Double Count" during the local update
+            pendingVotes[itemId] -= amountToSend;
+
+            try {
+                const itemRef = doc(db, `lists/${currentCategory}/items`, itemId);
+                await updateDoc(itemRef, {
+                    votes: increment(amountToSend)
+                });
+            } catch (e) {
+                console.error("Sync failed, returning votes to buffer", e);
+                // 2. If it fails, put them back so they aren't lost
+                pendingVotes[itemId] += amountToSend;
+            }
         }
-    });
+    }
 }, 2000);
 
 // --- Juice: Combo & Fever Mode Logic ---
@@ -3830,7 +3867,8 @@ let previousScreenBeforeStore = splashScreen; // Tracks where to go back to
 
 // Open the Store
 storeBtn.addEventListener('click', () => {
-    // Figure out which screen we are currently on
+    triggerHaptics('LIGHT');
+    // 1. Determine previous screen (Existing logic)
     if (!splashScreen.classList.contains('hidden')) {
         previousScreenBeforeStore = splashScreen;
         splashScreen.classList.add('hidden');
@@ -3839,20 +3877,55 @@ storeBtn.addEventListener('click', () => {
         categoryScreen.classList.add('hidden');
     }
     
-    // Show store, hide the store button itself
+    // 2. Reset and Show Store
+    storeScreen.classList.remove('active'); // Reset animation state
     storeScreen.classList.remove('hidden');
-    storeScreen.style.display = 'flex'; // Ensure flexbox layout works
+    storeScreen.style.display = 'flex';
     storeBtn.style.display = 'none'; 
+
+    // 3. Stagger the items
+    const items = storeScreen.querySelectorAll('.store-item');
+    items.forEach((item, index) => {
+        // Each item waits 0.1s longer than the last
+        item.style.animationDelay = `${index * 0.1}s`;
+    });
+
+    // 4. Trigger the animation
+    // RequestAnimationFrame ensures the 'active' class adds AFTER the display change
+    requestAnimationFrame(() => {
+        storeScreen.classList.add('active');
+    });
 });
 
 // Close the Store (Go Back)
 storeBackBtn.addEventListener('click', () => {
+    triggerHaptics('LIGHT');
+    // 1. Hide the store screen
     storeScreen.classList.add('hidden');
     storeScreen.style.display = 'none';
     
-    // Return to previous screen
-    previousScreenBeforeStore.classList.remove('hidden');
-    storeBtn.style.display = 'flex'; // Bring the store button back
+    // 2. IMPORTANT: Reset the animation state
+    // This removes the "active" class so animations can re-trigger next time
+    storeScreen.classList.remove('active');
+    
+    // 3. Clear the inline animation delays from the items
+    const items = storeScreen.querySelectorAll('.store-item');
+    items.forEach(item => {
+        item.style.animationDelay = ''; 
+    });
+
+    // 4. Return to the previous screen
+    if (previousScreenBeforeStore) {
+        previousScreenBeforeStore.classList.remove('hidden');
+        
+        // If your previous screen used flex, ensure it's restored
+        if (previousScreenBeforeStore === categoryScreen) {
+             previousScreenBeforeStore.style.display = 'flex';
+        }
+    }
+
+    // 5. Bring the store button back
+    storeBtn.style.display = 'flex'; 
 });
 
 // ==========================================
@@ -4075,51 +4148,70 @@ async function restorePurchases() {
 
 initRevenueCat();
 
-
-let isMuted = false; 
+// 1. INITIALIZATION
+let isMuted = false;
+const TARGET_VOLUME = 0.1; // 10% Volume
+const FADE_DURATION = 1.5; // Seconds
 
 // 2. BGM SETUP & ROUTING
 const bgm = new Audio('assets/bgmusic.mp3');
 bgm.loop = true;
 bgm.crossOrigin = "anonymous";
 
-// Route BGM through Web Audio so iOS respects the volume
 const bgmSource = audioCtx.createMediaElementSource(bgm);
 const bgmGain = audioCtx.createGain();
-bgmGain.gain.setValueAtTime(0.1, audioCtx.currentTime); // 10% Volume
+
+// Start at near-zero for the first fade
+bgmGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
 
 bgmSource.connect(bgmGain);
 bgmGain.connect(audioCtx.destination);
 
+// HELPER: Smooth Fade-In Function
+const fadeInBGM = (duration = FADE_DURATION) => {
+    const now = audioCtx.currentTime;
+    // Stop any existing volume changes
+    bgmGain.gain.cancelScheduledValues(now);
+    // Set starting point for the ramp
+    bgmGain.gain.setValueAtTime(bgmGain.gain.value, now);
+    // Smooth exponential ramp to target
+    bgmGain.gain.exponentialRampToValueAtTime(TARGET_VOLUME, now + duration);
+};
+
 // 3. MUTE BUTTON LOGIC
 const muteBtn = document.getElementById('mute-btn');
 if (muteBtn) {
-    muteBtn.addEventListener('click', (e) => {
+    muteBtn.addEventListener('click', async (e) => {
         e.stopPropagation(); 
         isMuted = !isMuted;
         
         if (isMuted) {
             bgm.pause();
-            audioCtx.suspend(); // Stops tap sounds too
+            audioCtx.suspend(); 
             muteBtn.innerText = '🔇';
         } else {
+            // Re-activate context and play
+            await audioCtx.resume();
             bgm.play();
-            audioCtx.resume();
+            fadeInBGM(1); // Slightly faster 1s fade on toggle
             muteBtn.innerText = '🔊';
         }
     });
 }
 
 // 4. THE "FIRST TAP" UNLOCKER
-const startAudio = () => {
-    // Resume context if iOS suspended it
+const startAudio = async () => {
     if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+        await audioCtx.resume();
     }
     
-    // Play BGM only if not explicitly muted
     if (!isMuted && bgm.paused) {
-        bgm.play().catch(err => console.log("Startup audio blocked:", err));
+        try {
+            await bgm.play();
+            fadeInBGM(2); // Smooth 2s intro fade
+        } catch (err) {
+            console.log("Startup audio blocked:", err);
+        }
     }
     
     document.removeEventListener('pointerdown', startAudio);
@@ -4129,14 +4221,15 @@ document.addEventListener('pointerdown', startAudio);
 // 5. CAPACITOR BACKGROUNDING
 const App = window.Capacitor?.Plugins?.App;
 if (App) {
-    App.addListener('appStateChange', ({ isActive }) => {
+    App.addListener('appStateChange', async ({ isActive }) => {
         if (!isActive) {
             bgm.pause();
             audioCtx.suspend();
         } else {
             if (!isMuted) {
+                await audioCtx.resume();
                 bgm.play();
-                audioCtx.resume();
+                fadeInBGM(1.2); // Fade back in when app returns to focus
             }
         }
     });
